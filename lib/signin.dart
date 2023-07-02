@@ -28,7 +28,7 @@ class signin extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(vertical: 50, horizontal: 24),
                   child: Text(
-                    'Welcome back! \We missed you 👋',
+                    'Welcome back! \We missed you! 👋',
                     style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w500,
