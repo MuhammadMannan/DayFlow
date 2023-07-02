@@ -38,7 +38,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 If you have any questions or suggestions regarding DayFlow, please feel free to reach out:
 
-- Email: [your-email@example.com](mailto:your-email@example.com)
-- Twitter: [@your-twitter-handle](https://twitter.com/your-twitter-handle)
+- Email: [usman.mannan@hotmail.com](mailto:usman.mannan@hotmail.com)
 
 We appreciate your interest and support in making DayFlow a valuable productivity tool!
