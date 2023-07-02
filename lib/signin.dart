@@ -1,6 +1,9 @@
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+
 import 'package:flutter/material.dart';
 import 'components/my_text_field.dart';
 import 'components/sign_in_button.dart';
+import 'components/alt_sign_in.dart';
 
 class signin extends StatelessWidget {
   signin({super.key});
@@ -25,8 +28,8 @@ class signin extends StatelessWidget {
               children: [
                 //logo/title
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 50, horizontal: 24),
+                  padding: const EdgeInsets.only(
+                      left: 24, right: 24, top: 50, bottom: 25),
                   child: Text(
                     'Welcome back! \We missed you! 👋',
                     style: TextStyle(
@@ -34,6 +37,14 @@ class signin extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF234EF3)),
                   ),
+                ),
+                //tagline
+                Text(
+                  '"Believe You Can And You’re Halfway There\n– Theodore Roosevelt"',
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(
+                  height: 25,
                 ),
                 //username
                 MyTextField(
@@ -61,6 +72,62 @@ class signin extends StatelessWidget {
                 //sign in
                 //google + apple
                 SizedBox(height: 25),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Text(
+                          'or continue with',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      //apple sign in
+                      const AltSignInButton(
+                        signInLable: 'Sign in with Apple',
+                        signinIcon: Icon(
+                          Icons.apple,
+                          color: Colors.white,
+                        ),
+                        buttonColor: Colors.black,
+                        textColor: Colors.white,
+                      ),
+
+                      //google sign in
+                      const AltSignInButton(
+                        signInLable: 'Sign in with Google',
+                        signinIcon: Icon(
+                          Icons.android,
+                          color: Colors.lightGreen,
+                        ),
+                        textColor: Colors.white,
+                        buttonColor: Colors.lightBlue,
+                      ),
+                    ],
+                  ),
+                )
 
                 //regster now
               ],
