@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'components/my_text_field.dart';
 import 'components/sign_in_button.dart';
 import 'components/alt_sign_in.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class signin extends StatelessWidget {
   signin({super.key});
@@ -26,14 +27,19 @@ class signin extends StatelessWidget {
           child: Center(
             child: Column(
               children: [
+                Text('DayFlow',
+                    style: GoogleFonts.poppins(
+                        fontStyle: FontStyle.normal,
+                        fontSize: 70,
+                        color: Color(0xFF234EF3))),
                 //logo/title
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 24, right: 24, top: 50, bottom: 25),
+                  padding:
+                      const EdgeInsets.only(left: 24, right: 24, bottom: 25),
                   child: Text(
                     'Welcome back! \We missed you! 👋',
                     style: TextStyle(
-                        fontSize: 40,
+                        fontSize: 38,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF234EF3)),
                   ),
@@ -102,19 +108,8 @@ class signin extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      //apple sign in
-                      const AltSignInButton(
-                        signInLable: 'Sign in with Apple',
-                        signinIcon: Icon(
-                          Icons.apple,
-                          color: Colors.white,
-                        ),
-                        buttonColor: Colors.black,
-                        textColor: Colors.white,
-                      ),
-
                       //google sign in
                       const AltSignInButton(
                         signInLable: 'Sign in with Google',
@@ -125,8 +120,37 @@ class signin extends StatelessWidget {
                         textColor: Colors.white,
                         buttonColor: Colors.lightBlue,
                       ),
+                      SizedBox(
+                        width: 15,
+                      ),
+                      //apple sign in
+                      const AltSignInButton(
+                        signInLable: 'Sign in with Apple',
+                        signinIcon: Icon(
+                          Icons.apple,
+                          color: Colors.white,
+                        ),
+                        buttonColor: Colors.black,
+                        textColor: Colors.white,
+                      ),
                     ],
                   ),
+                ),
+                SizedBox(
+                  height: 25,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Not a member? '),
+                    Text(
+                      'Register Now',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[700],
+                      ),
+                    )
+                  ],
                 )
 
                 //regster now

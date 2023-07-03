@@ -21,6 +21,7 @@ class AltSignInButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             signinIcon,
             SizedBox(
