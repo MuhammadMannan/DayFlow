@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'components/my_text_field.dart';
 import 'components/sign_in_button.dart';
-import 'components/alt_sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class signin extends StatelessWidget {
