@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'components/my_text_field.dart';
 import 'components/sign_in_button.dart';
@@ -8,8 +9,15 @@ import 'package:google_fonts/google_fonts.dart';
 class signin extends StatelessWidget {
   signin({super.key});
 
-  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  void signUserIn() async {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emailController.text,
+      password: passwordController.text,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +62,7 @@ class signin extends StatelessWidget {
                 ),
                 //username
                 MyTextField(
-                  controller: usernameController,
+                  controller: emailController,
                   hintText: 'E-Mail',
                   obscureText: false,
                 ),
@@ -73,7 +81,7 @@ class signin extends StatelessWidget {
 
                 //sign in button
                 SizedBox(height: 25),
-                MySignInButton(onTap: signUserIn()),
+                MySignInButton(onTap: signUserIn),
 
                 //sign in
                 //google + apple
@@ -161,6 +169,4 @@ class signin extends StatelessWidget {
       ),
     );
   }
-
-  signUserIn() {}
 }
