@@ -1,5 +1,4 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
 import 'components/my_text_field.dart';
 import 'components/sign_in_button.dart';
@@ -26,6 +25,7 @@ class signin extends StatelessWidget {
         body: SafeArea(
           child: Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('DayFlow',
                     style: GoogleFonts.poppins(
@@ -78,34 +78,34 @@ class signin extends StatelessWidget {
                 //sign in
                 //google + apple
                 SizedBox(height: 25),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'or continue with',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 24),
-                Padding(
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                //   child: Row(
+                //     children: [
+                //       Expanded(
+                //         child: Divider(
+                //           thickness: 0.5,
+                //           color: Colors.grey[400],
+                //         ),
+                //       ),
+                //       Padding(
+                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                //         child: Text(
+                //           'or continue with',
+                //           style: TextStyle(color: Colors.grey),
+                //         ),
+                //       ),
+                //       Expanded(
+                //         child: Divider(
+                //           thickness: 0.5,
+                //           color: Colors.grey,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                // SizedBox(height: 24),
+                /*Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -135,10 +135,10 @@ class signin extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-                SizedBox(
-                  height: 25,
-                ),
+                ),*/
+                // SizedBox(
+                //   height: 25,
+                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

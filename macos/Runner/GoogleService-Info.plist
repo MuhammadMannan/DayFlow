@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>638454338811-p4fbj5lo70iden324ah0pcsb7u7le0sv.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.638454338811-p4fbj5lo70iden324ah0pcsb7u7le0sv</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDdWXi7z9OZQ-PVCzzCGj9tvDaSpC1nNwI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>638454338811</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.dayflow.RunnerTests</string>
+	<key>PROJECT_ID</key>
+	<string>dayflow-4ed72</string>
+	<key>STORAGE_BUCKET</key>
+	<string>dayflow-4ed72.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:638454338811:ios:6c4beea36f90bc86d14c5e</string>
+</dict>
+</plist>

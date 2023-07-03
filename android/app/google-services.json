@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "638454338811",
+    "project_id": "dayflow-4ed72",
+    "storage_bucket": "dayflow-4ed72.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638454338811:android:45f146ccff5143fbd14c5e",
+        "android_client_info": {
+          "package_name": "com.example.dayflow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "638454338811-u311so2uvmhb2abhp6brg48bugpvm3ri.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTmHFJpHitI_AQjir_uACHdz6oBk85QU8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "638454338811-u311so2uvmhb2abhp6brg48bugpvm3ri.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
