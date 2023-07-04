@@ -5,13 +5,29 @@ import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class signin extends StatelessWidget {
+class signin extends StatefulWidget {
   signin({super.key});
 
+  @override
+  State<signin> createState() => _signinState();
+}
+
+class _signinState extends State<signin> {
   final emailController = TextEditingController();
+
   final passwordController = TextEditingController();
 
   void signUserIn() async {
+    //show a loading circle
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+
     await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: emailController.text,
       password: passwordController.text,
@@ -88,67 +104,6 @@ class signin extends StatelessWidget {
                 //sign in
                 //google + apple
                 SizedBox(height: 25),
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //       Padding(
-                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                //         child: Text(
-                //           'or continue with',
-                //           style: TextStyle(color: Colors.grey),
-                //         ),
-                //       ),
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey,
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-                // SizedBox(height: 24),
-                /*Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      //google sign in
-                      const AltSignInButton(
-                        signInLable: 'Sign in with Google',
-                        signinIcon: Icon(
-                          Icons.android,
-                          color: Colors.lightGreen,
-                        ),
-                        textColor: Colors.white,
-                        buttonColor: Colors.lightBlue,
-                      ),
-                      SizedBox(
-                        width: 15,
-                      ),
-                      //apple sign in
-                      const AltSignInButton(
-                        signInLable: 'Sign in with Apple',
-                        signinIcon: Icon(
-                          Icons.apple,
-                          color: Colors.white,
-                        ),
-                        buttonColor: Colors.black,
-                        textColor: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),*/
-                // SizedBox(
-                //   height: 25,
-                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
