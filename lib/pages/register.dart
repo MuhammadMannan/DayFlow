@@ -5,19 +5,21 @@ import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class signin extends StatefulWidget {
+class registerPage extends StatefulWidget {
   final Function() onTap;
 
-  signin({super.key, required this.onTap});
+  registerPage({super.key, required this.onTap});
 
   @override
-  State<signin> createState() => _signinState();
+  State<registerPage> createState() => _registerPageState();
 }
 
-class _signinState extends State<signin> {
+class _registerPageState extends State<registerPage> {
   final emailController = TextEditingController();
 
   final passwordController = TextEditingController();
+
+  final confirmPasswordController = TextEditingController();
 
   //error message to user
   void showErrorMessage(String message) {
@@ -33,7 +35,7 @@ class _signinState extends State<signin> {
     );
   }
 
-  void signUserIn() async {
+  void signUserUp() async {
     //show a loading circle
     showDialog(
       context: context,
@@ -45,10 +47,17 @@ class _signinState extends State<signin> {
     );
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
+      //check is password and confirm password is the same
+      if (passwordController.text == confirmPasswordController.text) {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
+        );
+      } else {
+        //show error message, passwords do not match
+        showErrorMessage('Passwords do not match!ß');
+      }
+
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);
@@ -86,7 +95,7 @@ class _signinState extends State<signin> {
                     padding:
                         const EdgeInsets.only(left: 24, right: 24, bottom: 25),
                     child: Text(
-                      'Welcome back!\nWe missed you! 👋',
+                      'Hi nice to meet you! 👋',
                       style: TextStyle(
                           fontSize: 38,
                           fontWeight: FontWeight.w500,
@@ -94,13 +103,7 @@ class _signinState extends State<signin> {
                     ),
                   ),
                   //tagline
-                  Text(
-                    '"Believe You Can And You’re Halfway There\n– Theodore Roosevelt"',
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(
-                    height: 25,
-                  ),
+
                   //username
                   MyTextField(
                     controller: emailController,
@@ -115,16 +118,20 @@ class _signinState extends State<signin> {
                     hintText: 'Password',
                     obscureText: true,
                   ),
-
                   SizedBox(height: 25),
-                  //forgot password
-                  Text('forgot password'),
+
+                  //confirm password
+                  MyTextField(
+                    controller: confirmPasswordController,
+                    hintText: 'Confirm password',
+                    obscureText: true,
+                  ),
 
                   //sign in button
                   SizedBox(height: 25),
                   MySignInButton(
-                    onTap: signUserIn,
-                    text: 'Sign in',
+                    onTap: signUserUp,
+                    text: 'Sign up',
                   ),
 
                   //sign in
@@ -133,14 +140,14 @@ class _signinState extends State<signin> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Not a member? '),
+                      Text('Have an account? '),
                       GestureDetector(
                         onTap: widget.onTap,
                         child: Text(
-                          'Register Now',
+                          'Login Now',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
+                            color: Color(0xFF234EF3),
                           ),
                         ),
                       )
