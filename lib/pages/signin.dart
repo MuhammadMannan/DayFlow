@@ -17,6 +17,28 @@ class _signinState extends State<signin> {
 
   final passwordController = TextEditingController();
 
+  void wrongEmailMessage() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('No existing user with\nthat email account'),
+        );
+      },
+    );
+  }
+
+  void wrongPasswordMessage() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('Incorrect password entered'),
+        );
+      },
+    );
+  }
+
   void signUserIn() async {
     //show a loading circle
     showDialog(
@@ -28,12 +50,22 @@ class _signinState extends State<signin> {
       },
     );
 
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: emailController.text,
-      password: passwordController.text,
-    );
-
-    Navigator.pop(context);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      Navigator.pop(context);
+      if (e.code == 'user-not-found') {
+        //show error to user
+        wrongEmailMessage();
+      } else if (e.code == 'wrong-password') {
+        //show error to user
+        wrongPasswordMessage();
+      }
+    }
   }
 
   @override
