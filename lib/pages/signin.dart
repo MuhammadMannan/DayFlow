@@ -32,6 +32,8 @@ class _signinState extends State<signin> {
       email: emailController.text,
       password: passwordController.text,
     );
+
+    Navigator.pop(context);
   }
 
   @override
