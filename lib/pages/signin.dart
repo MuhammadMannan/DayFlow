@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'components/my_text_field.dart';
-import 'components/sign_in_button.dart';
+import 'package:dayflow/components/my_text_field.dart';
+import 'package:dayflow/components/sign_in_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class signin extends StatelessWidget {
@@ -34,17 +34,20 @@ class signin extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('DayFlow',
-                    style: GoogleFonts.poppins(
-                        fontStyle: FontStyle.normal,
-                        fontSize: 70,
-                        color: Color(0xFF234EF3))),
+                Text(
+                  'DayFlow',
+                  style: GoogleFonts.poppins(
+                    fontStyle: FontStyle.normal,
+                    fontSize: 70,
+                    color: Color(0xFF234EF3),
+                  ),
+                ),
                 //logo/title
                 Padding(
                   padding:
                       const EdgeInsets.only(left: 24, right: 24, bottom: 25),
                   child: Text(
-                    'Welcome back! \We missed you! 👋',
+                    'Welcome back!\nWe missed you! 👋',
                     style: TextStyle(
                         fontSize: 38,
                         fontWeight: FontWeight.w500,

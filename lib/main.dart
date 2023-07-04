@@ -1,4 +1,4 @@
-import 'package:dayflow/auth_page.dart';
+import 'package:dayflow/pages/auth_page.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
