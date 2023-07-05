@@ -55,7 +55,7 @@ class _registerPageState extends State<registerPage> {
         );
       } else {
         //show error message, passwords do not match
-        showErrorMessage('Passwords do not match!ß');
+        showErrorMessage('Passwords do not match!');
       }
 
       Navigator.pop(context);
@@ -96,7 +96,7 @@ class _registerPageState extends State<registerPage> {
                         const EdgeInsets.only(left: 24, right: 24, bottom: 25),
                     child: Text(
                       'Hi nice to meet you! 👋',
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                           fontSize: 38,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF234EF3)),

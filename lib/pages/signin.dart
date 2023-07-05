@@ -86,9 +86,9 @@ class _signinState extends State<signin> {
                     padding:
                         const EdgeInsets.only(left: 24, right: 24, bottom: 25),
                     child: Text(
-                      'Welcome back!\nWe missed you! 👋',
-                      style: TextStyle(
-                          fontSize: 38,
+                      'Welcome back, we missed you! 👋',
+                      style: GoogleFonts.poppins(
+                          fontSize: 30,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF234EF3)),
                     ),
