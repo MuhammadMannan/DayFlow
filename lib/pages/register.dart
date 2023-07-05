@@ -97,7 +97,7 @@ class _registerPageState extends State<registerPage> {
                     child: Text(
                       'Hi nice to meet you! 👋',
                       style: GoogleFonts.poppins(
-                          fontSize: 38,
+                          fontSize: 30,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF234EF3)),
                     ),
