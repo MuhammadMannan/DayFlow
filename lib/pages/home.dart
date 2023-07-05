@@ -99,6 +99,14 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 //option to create a new entry
+                Padding(
+                  padding: const EdgeInsets.only(left: 34.0, top: 20),
+                  child: Text(
+                    'Your Days',
+                    style: GoogleFonts.montserrat(
+                        fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
               ],
             ),
           ),
