@@ -1,10 +1,9 @@
-// ignore_for_file: prefer_const_constructors
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomePage extends StatelessWidget {
-  HomePage({super.key});
+  HomePage({Key? key});
 
   final user = FirebaseAuth.instance.currentUser!;
 
@@ -107,6 +106,15 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              // Handle floating action button tap
+            },
+            child: Icon(Icons.add),
+            backgroundColor: Colors.white,
+            foregroundColor: Color(0xFF234EF3),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
       ),
     );
