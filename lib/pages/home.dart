@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'create_entry.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({Key? key});
@@ -108,6 +109,10 @@ class HomePage extends StatelessWidget {
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => createEntry()),
+              );
               // Handle floating action button tap
             },
             child: Icon(Icons.add),
