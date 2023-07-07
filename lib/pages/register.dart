@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+import 'package:dayflow/pages/signin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
@@ -142,15 +143,24 @@ class _registerPageState extends State<registerPage> {
                     children: [
                       Text('Have an account? '),
                       GestureDetector(
-                        onTap: widget.onTap,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => signin(
+                                onTap: () {},
+                              ),
+                            ),
+                          );
+                        },
                         child: Text(
                           'Login Now',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF234EF3),
+                            color: Colors.blue[700],
                           ),
                         ),
-                      )
+                      ),
                     ],
                   )
 

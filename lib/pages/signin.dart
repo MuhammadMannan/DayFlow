@@ -1,4 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+import 'package:dayflow/pages/home.dart';
+import 'package:dayflow/pages/register.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
@@ -123,7 +125,12 @@ class _signinState extends State<signin> {
                   //sign in button
                   SizedBox(height: 25),
                   MySignInButton(
-                    onTap: signUserIn,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomePage()),
+                      );
+                    },
                     text: 'Sign in',
                   ),
 
@@ -135,7 +142,16 @@ class _signinState extends State<signin> {
                     children: [
                       Text('Not a member? '),
                       GestureDetector(
-                        onTap: widget.onTap,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => registerPage(
+                                onTap: () {},
+                              ),
+                            ),
+                          );
+                        },
                         child: Text(
                           'Register Now',
                           style: TextStyle(
@@ -143,7 +159,7 @@ class _signinState extends State<signin> {
                             color: Colors.blue[700],
                           ),
                         ),
-                      )
+                      ),
                     ],
                   )
 

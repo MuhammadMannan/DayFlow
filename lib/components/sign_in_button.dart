@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class MySignInButton extends StatelessWidget {
-  final Function()? onTap;
+  final VoidCallback onTap;
   final String text;
 
-  MySignInButton({super.key, required this.onTap, required this.text});
+  MySignInButton({Key? key, required this.onTap, required this.text});
 
   @override
   Widget build(BuildContext context) {

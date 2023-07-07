@@ -1,3 +1,4 @@
+import 'package:dayflow/pages/signin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,11 +7,23 @@ import 'create_entry.dart';
 class HomePage extends StatelessWidget {
   HomePage({Key? key});
 
-  final user = FirebaseAuth.instance.currentUser!;
+  final user = FirebaseAuth.instance.currentUser;
 
   //function to sign out user
-  void signUserOut() {
-    FirebaseAuth.instance.signOut();
+  void signUserOut(BuildContext context) {
+    FirebaseAuth.instance.signOut().then((_) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (context) => signin(
+                  onTap: () {},
+                )),
+        (route) => false,
+      );
+    }).catchError((error) {
+      // Handle sign out error
+      print('Error signing out: $error');
+    });
   }
 
   @override
@@ -50,7 +63,7 @@ class HomePage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 24.0),
                 child: IconButton(
-                  onPressed: signUserOut,
+                  onPressed: () => signUserOut(context), // Pass context here
                   icon: Icon(
                     Icons.logout,
                     color: Color(0xFF234EF3),
