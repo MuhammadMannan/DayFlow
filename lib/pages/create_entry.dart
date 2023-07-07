@@ -3,9 +3,6 @@
 import 'package:dayflow/pages/signin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
-
-import '../components/AddNewTaskModel.dart';
 
 class createEntry extends StatelessWidget {
   final user = FirebaseAuth.instance.currentUser;
@@ -61,55 +58,7 @@ class createEntry extends StatelessWidget {
               ),
             ),
           ]),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              Gap(20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Create A Task',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text('July 6th 2023'),
-                    ],
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFD5E8FA),
-                      foregroundColor: Colors.blue.shade800,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    onPressed: () => showModalBottomSheet(
-                      isScrollControlled: true,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      context: context,
-                      builder: (context) => AddNewTaskModel(),
-                    ),
-                    child: Text(
-                      '+ Add Task',
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
+      body: SingleChildScrollView(),
     );
   }
 }

@@ -60,112 +60,104 @@ class _signinState extends State<signin> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/Group2.png"),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'DayFlow',
-                    style: GoogleFonts.poppins(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 70,
-                      color: Color(0xFF234EF3),
-                    ),
+    return Scaffold(
+      backgroundColor: Color(0xFFEDF3FC),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'DayFlow',
+                  style: GoogleFonts.robotoMono(
+                    fontStyle: FontStyle.normal,
+                    fontSize: 70,
+                    color: Color(0xFF234EF3),
                   ),
-                  //logo/title
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 24, right: 24, bottom: 25),
-                    child: Text(
-                      'Welcome back, we missed you! 👋',
-                      style: GoogleFonts.poppins(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF234EF3)),
-                    ),
+                ),
+                //logo/title
+                Padding(
+                  padding:
+                      const EdgeInsets.only(left: 24, right: 24, bottom: 25),
+                  child: Text(
+                    'Welcome back, we missed you! 👋',
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF234EF3)),
                   ),
-                  //tagline
-                  Text(
-                    '"Believe You Can And You’re Halfway There\n– Theodore Roosevelt"',
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(
-                    height: 25,
-                  ),
-                  //username
-                  MyTextField(
-                    controller: emailController,
-                    hintText: 'E-Mail',
-                    obscureText: false,
-                  ),
-                  SizedBox(height: 25),
+                ),
+                //tagline
+                Text(
+                  '"Believe You Can And You’re Halfway There\n– Theodore Roosevelt"',
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(
+                  height: 25,
+                ),
+                //username
+                MyTextField(
+                  controller: emailController,
+                  hintText: 'E-Mail',
+                  obscureText: false,
+                ),
+                SizedBox(height: 25),
 
-                  //password
-                  MyTextField(
-                    controller: passwordController,
-                    hintText: 'Password',
-                    obscureText: true,
-                  ),
+                //password
+                MyTextField(
+                  controller: passwordController,
+                  hintText: 'Password',
+                  obscureText: true,
+                ),
 
-                  SizedBox(height: 25),
-                  //forgot password
-                  Text('forgot password'),
+                SizedBox(height: 25),
+                //forgot password
+                Text('forgot password'),
 
-                  //sign in button
-                  SizedBox(height: 25),
-                  MySignInButton(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomePage()),
-                      );
-                    },
-                    text: 'Sign in',
-                  ),
+                //sign in button
+                SizedBox(height: 25),
+                MySignInButton(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                    );
+                  },
+                  text: 'Sign in',
+                ),
 
-                  //sign in
-                  //google + apple
-                  SizedBox(height: 25),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Not a member? '),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => registerPage(
-                                onTap: () {},
-                              ),
+                //sign in
+                //google + apple
+                SizedBox(height: 25),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Not a member? '),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => registerPage(
+                              onTap: () {},
                             ),
-                          );
-                        },
-                        child: Text(
-                          'Register Now',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
                           ),
+                        );
+                      },
+                      child: Text(
+                        'Register Now',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF234EF3),
                         ),
                       ),
-                    ],
-                  )
+                    ),
+                  ],
+                )
 
-                  //regster now
-                ],
-              ),
+                //regster now
+              ],
             ),
           ),
         ),
