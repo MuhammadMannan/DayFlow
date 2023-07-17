@@ -33,10 +33,12 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xFFEDF3FC),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'DayFlow',
-          style: TextStyle(
-            color: Color(0xFF234EF3),
+          style: GoogleFonts.robotoMono(
+            textStyle: TextStyle(
+              color: Color(0xFF234EF3),
+            ),
           ),
         ),
         elevation: 0,
@@ -76,7 +78,7 @@ class HomePage extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 34.0, top: 20),
                 child: Text(
                   'Welcome back!',
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.robotoMono(
                       fontSize: 30, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -84,34 +86,24 @@ class HomePage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 34.0, top: 20),
                 child: Text(
-                  'Your Streak',
-                  style: GoogleFonts.montserrat(
-                      fontSize: 14, fontWeight: FontWeight.w500),
+                  'Your Tasks For Today',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ),
-              //streaks will go in here
-              Padding(
-                padding: const EdgeInsets.only(left: 34.0, top: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.white,
-                  ),
-                  child: SizedBox(
-                    width: 300,
-                    height: 100,
-                  ),
-                ),
-              ),
-              //option to create a new entry
+
+              //add tasks here
+
               Padding(
                 padding: const EdgeInsets.only(left: 34.0, top: 20),
                 child: Text(
-                  'Your Days',
-                  style: GoogleFonts.montserrat(
-                      fontSize: 14, fontWeight: FontWeight.w500),
+                  'Previous Entries',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ),
+
+              //adding entry
             ],
           ),
         ),
@@ -122,7 +114,6 @@ class HomePage extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (context) => createEntry()),
           );
-          // Handle floating action button tap
         },
         child: Icon(Icons.add),
         backgroundColor: Colors.white,

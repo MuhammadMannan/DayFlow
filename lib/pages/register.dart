@@ -68,105 +68,97 @@ class _registerPageState extends State<registerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/Group2.png"),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'DayFlow',
+    return Scaffold(
+      backgroundColor: Color(0xFFEDF3FC),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'DayFlow',
+                  style: GoogleFonts.poppins(
+                    fontStyle: FontStyle.normal,
+                    fontSize: 70,
+                    color: Color(0xFF234EF3),
+                  ),
+                ),
+                //logo/title
+                Padding(
+                  padding:
+                      const EdgeInsets.only(left: 24, right: 24, bottom: 25),
+                  child: Text(
+                    'Hi nice to meet you! 👋',
                     style: GoogleFonts.poppins(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 70,
-                      color: Color(0xFF234EF3),
-                    ),
+                        fontSize: 30,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF234EF3)),
                   ),
-                  //logo/title
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 24, right: 24, bottom: 25),
-                    child: Text(
-                      'Hi nice to meet you! 👋',
-                      style: GoogleFonts.poppins(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF234EF3)),
-                    ),
-                  ),
-                  //tagline
+                ),
+                //tagline
 
-                  //username
-                  MyTextField(
-                    controller: emailController,
-                    hintText: 'E-Mail',
-                    obscureText: false,
-                  ),
-                  SizedBox(height: 25),
+                //username
+                MyTextField(
+                  controller: emailController,
+                  hintText: 'E-Mail',
+                  obscureText: false,
+                ),
+                SizedBox(height: 25),
 
-                  //password
-                  MyTextField(
-                    controller: passwordController,
-                    hintText: 'Password',
-                    obscureText: true,
-                  ),
-                  SizedBox(height: 25),
+                //password
+                MyTextField(
+                  controller: passwordController,
+                  hintText: 'Password',
+                  obscureText: true,
+                ),
+                SizedBox(height: 25),
 
-                  //confirm password
-                  MyTextField(
-                    controller: confirmPasswordController,
-                    hintText: 'Confirm password',
-                    obscureText: true,
-                  ),
+                //confirm password
+                MyTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm password',
+                  obscureText: true,
+                ),
 
-                  //sign in button
-                  SizedBox(height: 25),
-                  MySignInButton(
-                    onTap: signUserUp,
-                    text: 'Sign up',
-                  ),
+                //sign in button
+                SizedBox(height: 25),
+                MySignInButton(
+                  onTap: signUserUp,
+                  text: 'Sign up',
+                ),
 
-                  //sign in
-                  //google + apple
-                  SizedBox(height: 25),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Have an account? '),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => signin(
-                                onTap: () {},
-                              ),
+                //sign in
+                //google + apple
+                SizedBox(height: 25),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Have an account? '),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => signin(
+                              onTap: () {},
                             ),
-                          );
-                        },
-                        child: Text(
-                          'Login Now',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
                           ),
+                        );
+                      },
+                      child: Text(
+                        'Login Now',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[700],
                         ),
                       ),
-                    ],
-                  )
+                    ),
+                  ],
+                )
 
-                  //regster now
-                ],
-              ),
+                //regster now
+              ],
             ),
           ),
         ),
