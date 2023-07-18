@@ -6,26 +6,66 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'create_entry.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({Key? key});
+class HomePage extends StatefulWidget {
+  HomePage({Key? key}) : super(key: key);
 
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final user = FirebaseAuth.instance.currentUser;
+  List<String> tasks = []; // List to store tasks
 
-  //function to sign out user
+  // Function to sign out user
   void signUserOut(BuildContext context) {
     FirebaseAuth.instance.signOut().then((_) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-            builder: (context) => signin(
-                  onTap: () {},
-                )),
+        MaterialPageRoute(builder: (context) => signin(onTap: () {})),
         (route) => false,
       );
     }).catchError((error) {
       // Handle sign out error
       print('Error signing out: $error');
     });
+  }
+
+  // Function to add a task
+  void addTask(String task) {
+    setState(() {
+      tasks.add(task);
+    });
+  }
+
+  // Function to show dialog for adding a task
+  void showAddTaskDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String newTask = '';
+        return AlertDialog(
+          title: Text('Add Task'),
+          content: TextField(
+            onChanged: (value) {
+              newTask = value;
+            },
+            decoration: InputDecoration(
+              hintText: 'Enter task',
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                addTask(newTask);
+                Navigator.of(context).pop();
+              },
+              child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -59,7 +99,7 @@ class HomePage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 24.0),
             child: IconButton(
-              onPressed: () => signUserOut(context), // Pass context here
+              onPressed: () => signUserOut(context),
               icon: Icon(
                 Icons.logout,
                 color: Color(0xFF234EF3),
@@ -71,55 +111,105 @@ class HomePage extends StatelessWidget {
       body: SafeArea(
         child: Container(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              //welcome text
               Padding(
-                padding: const EdgeInsets.only(left: 34.0, top: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
                 child: Text(
-                  'Welcome back!',
-                  style: GoogleFonts.robotoMono(
-                      fontSize: 30, fontWeight: FontWeight.w600),
-                ),
-              ),
-              //Overview Panel
-              Padding(
-                padding: const EdgeInsets.only(left: 34.0, top: 20),
-                child: Text(
-                  'Your Tasks For Today',
-                  style: GoogleFonts.robotoMono(
-                      fontSize: 20, fontWeight: FontWeight.w600),
+                  'Welcome Back',
+                  style: GoogleFonts.poppins(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF234EF3),
+                  ),
                 ),
               ),
 
-              //add tasks here
-
+              // Panel to show tasks and add them
               Padding(
-                padding: const EdgeInsets.only(left: 34.0, top: 20),
-                child: Text(
-                  'Previous Entries',
-                  style: GoogleFonts.robotoMono(
-                      fontSize: 20, fontWeight: FontWeight.w600),
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 20),
+                          Text(
+                            'Today\'s Tasks',
+                            style: GoogleFonts.poppins(fontSize: 30),
+                          ),
+                          SizedBox(height: 10),
+                          FractionallySizedBox(
+                            widthFactor: 0.9,
+                            child: Container(
+                              child: tasks.isEmpty
+                                  ? Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(40.0),
+                                        child: Text(
+                                          'Add a task to get started',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: tasks.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return ListTile(
+                                          title: Text(tasks[index]),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: 8.0, right: 8.0), // Add padding
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color(
+                                  0xFF234EF3), // Set the background color to blue
+                              borderRadius: BorderRadius.circular(
+                                  50), // Optional: Add border radius
+                            ),
+                            child: IconButton(
+                              onPressed: showAddTaskDialog,
+                              icon: Icon(
+                                Icons.add,
+                                size: 20,
+                              ),
+                              color: Colors
+                                  .white, // Set the foreground (icon) color to white
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              //adding entry
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => createEntry()),
-          );
-        },
-        child: Icon(Icons.add),
-        backgroundColor: Colors.white,
-        foregroundColor: Color(0xFF234EF3),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

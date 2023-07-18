@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:dayflow/pages/auth_page.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
