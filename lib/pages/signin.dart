@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class signin extends StatefulWidget {
   final Function() onTap;
@@ -36,7 +35,7 @@ class _signinState extends State<signin> {
   }
 
   void signUserIn() async {
-    //show a loading circle
+    // Show a loading circle
     showDialog(
       context: context,
       builder: (context) {
@@ -51,10 +50,16 @@ class _signinState extends State<signin> {
         email: emailController.text,
         password: passwordController.text,
       );
-      Navigator.pop(context);
+
+      // Authentication successful, navigate to HomePage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
     } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
+      // Authentication failed, show error message
       showErrorMessage(e.code);
+      Navigator.pop(context);
     }
   }
 
@@ -70,29 +75,28 @@ class _signinState extends State<signin> {
               children: [
                 Text(
                   'DayFlow',
-                  style: GoogleFonts.robotoMono(
+                  style: TextStyle(
                     fontStyle: FontStyle.normal,
                     fontSize: 70,
+                    fontWeight: FontWeight.bold,
                     color: Color(0xFF234EF3),
                   ),
                 ),
+                SizedBox(
+                  height: 15,
+                ),
                 //logo/title
                 Padding(
-                  padding:
-                      const EdgeInsets.only(left: 24, right: 24, bottom: 25),
+                  padding: const EdgeInsets.only(left: 24, right: 24),
                   child: Text(
                     'Welcome back, we missed you! 👋',
-                    style: GoogleFonts.robotoMono(
+                    style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF234EF3)),
                   ),
                 ),
                 //tagline
-                Text(
-                  '"Believe You Can And You’re Halfway There\n– Theodore Roosevelt"',
-                  textAlign: TextAlign.center,
-                ),
                 SizedBox(
                   height: 25,
                 ),
@@ -118,12 +122,7 @@ class _signinState extends State<signin> {
                 //sign in button
                 SizedBox(height: 25),
                 MySignInButton(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomePage()),
-                    );
-                  },
+                  onTap: signUserIn, // Call the signUserIn function directly
                   text: 'Sign in',
                 ),
 

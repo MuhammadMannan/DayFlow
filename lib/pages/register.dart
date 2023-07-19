@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class registerPage extends StatefulWidget {
   final Function() onTap;
@@ -78,8 +77,9 @@ class _registerPageState extends State<registerPage> {
               children: [
                 Text(
                   'DayFlow',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.bold,
                     fontSize: 70,
                     color: Color(0xFF234EF3),
                   ),
@@ -90,7 +90,7 @@ class _registerPageState extends State<registerPage> {
                       const EdgeInsets.only(left: 24, right: 24, bottom: 25),
                   child: Text(
                     'Hi nice to meet you! 👋',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF234EF3)),
@@ -150,7 +150,7 @@ class _registerPageState extends State<registerPage> {
                         'Login Now',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
+                          color: Color(0xFF234EF3),
                         ),
                       ),
                     ),

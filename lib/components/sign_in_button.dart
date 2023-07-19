@@ -16,7 +16,7 @@ class MySignInButton extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: Color(0xFF234EF3),
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
                 color: Color(0xFF84B1F3), // Shadow color

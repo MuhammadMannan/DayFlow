@@ -1,71 +1,32 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:dayflow/pages/signin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'create_entry.dart';
+import 'package:gap/gap.dart';
 
-class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
+import '../components/addTaskModal.dart';
 
-  @override
-  _HomePageState createState() => _HomePageState();
-}
+class HomePage extends StatelessWidget {
+  HomePage({Key? key});
 
-class _HomePageState extends State<HomePage> {
   final user = FirebaseAuth.instance.currentUser;
-  List<String> tasks = []; // List to store tasks
 
-  // Function to sign out user
+  //function to sign out user
   void signUserOut(BuildContext context) {
     FirebaseAuth.instance.signOut().then((_) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => signin(onTap: () {})),
+        MaterialPageRoute(
+            builder: (context) => signin(
+                  onTap: () {},
+                )),
         (route) => false,
       );
     }).catchError((error) {
       // Handle sign out error
       print('Error signing out: $error');
     });
-  }
-
-  // Function to add a task
-  void addTask(String task) {
-    setState(() {
-      tasks.add(task);
-    });
-  }
-
-  // Function to show dialog for adding a task
-  void showAddTaskDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String newTask = '';
-        return AlertDialog(
-          title: Text('Add Task'),
-          content: TextField(
-            onChanged: (value) {
-              newTask = value;
-            },
-            decoration: InputDecoration(
-              hintText: 'Enter task',
-            ),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                addTask(newTask);
-                Navigator.of(context).pop();
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -75,10 +36,9 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text(
           'DayFlow',
-          style: GoogleFonts.robotoMono(
-            textStyle: TextStyle(
-              color: Color(0xFF234EF3),
-            ),
+          style: TextStyle(
+            color: Color(0xFF234EF3),
+            fontWeight: FontWeight.w600,
           ),
         ),
         elevation: 0,
@@ -99,7 +59,7 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 24.0),
             child: IconButton(
-              onPressed: () => signUserOut(context),
+              onPressed: () => signUserOut(context), // Pass context here
               icon: Icon(
                 Icons.logout,
                 color: Color(0xFF234EF3),
@@ -109,102 +69,52 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SafeArea(
-        child: Container(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: Text(
-                  'Welcome Back',
-                  style: GoogleFonts.poppins(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF234EF3),
+              Gap(12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Today\'s Tasks',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF234EF3)),
+                      ),
+                      Text(
+                        'Tuesday July 18',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-
-              // Panel to show tasks and add them
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                      ),
-                      child: Column(
-                        children: [
-                          SizedBox(height: 20),
-                          Text(
-                            'Today\'s Tasks',
-                            style: GoogleFonts.poppins(fontSize: 30),
-                          ),
-                          SizedBox(height: 10),
-                          FractionallySizedBox(
-                            widthFactor: 0.9,
-                            child: Container(
-                              child: tasks.isEmpty
-                                  ? Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(40.0),
-                                        child: Text(
-                                          'Add a task to get started',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: tasks.length,
-                                      itemBuilder:
-                                          (BuildContext context, int index) {
-                                        return ListTile(
-                                          title: Text(tasks[index]),
-                                        );
-                                      },
-                                    ),
-                            ),
-                          ),
-                        ],
+                  Gap(12),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0XFFD5E8FA),
+                      foregroundColor: Colors.blue.shade700,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 8.0, right: 8.0), // Add padding
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Color(
-                                  0xFF234EF3), // Set the background color to blue
-                              borderRadius: BorderRadius.circular(
-                                  50), // Optional: Add border radius
-                            ),
-                            child: IconButton(
-                              onPressed: showAddTaskDialog,
-                              icon: Icon(
-                                Icons.add,
-                                size: 20,
-                              ),
-                              color: Colors
-                                  .white, // Set the foreground (icon) color to white
-                            ),
-                          ),
-                        ),
-                      ),
+                    onPressed: () => showModalBottomSheet(
+                      isScrollControlled: true,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      context: context,
+                      builder: (context) => addTaskModal(),
                     ),
-                  ],
-                ),
+                    child: Text(
+                      'Add Task',
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
