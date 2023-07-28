@@ -7,8 +7,8 @@ import 'package:gap/gap.dart';
 
 import '../components/addTaskModal.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({Key? key});
+class taskPage extends StatelessWidget {
+  taskPage({Key? key});
 
   final user = FirebaseAuth.instance.currentUser;
 
