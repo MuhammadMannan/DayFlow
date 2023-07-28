@@ -54,7 +54,7 @@ class _signinState extends State<signin> {
       // Authentication successful, navigate to HomePage
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => taskPage()),
       );
     } on FirebaseAuthException catch (e) {
       // Authentication failed, show error message
