@@ -8,7 +8,7 @@ import 'package:gap/gap.dart';
 import '../components/addTaskModal.dart';
 
 class taskPage extends StatelessWidget {
-  taskPage({Key? key});
+  taskPage({Key? key, required Null Function() onTap});
 
   final user = FirebaseAuth.instance.currentUser;
 
