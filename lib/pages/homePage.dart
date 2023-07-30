@@ -1,4 +1,4 @@
-// ignore_for_file: sort_child_properties_last, prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: sort_child_properties_last, prefer_const_constructors, prefer_const_literals_to_create_immutables, file_names
 
 import 'package:dayflow/pages/signin.dart';
 import 'package:dayflow/pages/taskPage.dart';
@@ -108,66 +108,63 @@ class _homePageState extends State<homePage> {
 
       //navigation bar
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 15),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: Color(0xFF234EF3),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GNav(
-              tabBorderRadius: 5,
-              tabBackgroundColor: Color(0xFFA5B7FF),
-              backgroundColor: Color(0xFF234EF3),
-              color: Color(0xFFA5B7FF),
-              activeColor: Colors.white,
-              gap: 8,
-              iconSize: 20,
-              textSize: 10,
-              padding: EdgeInsets.all(6),
-              selectedIndex: _selectedIndex,
-              onTabChange: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
+        padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 15),
+        child: FractionallySizedBox(
+          widthFactor: 0.85,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Color(0xFF234EF3),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GNav(
+                tabBorderRadius: 5,
+                tabBackgroundColor: Color(0xFFA5B7FF),
+                backgroundColor: Color(0xFF234EF3),
+                color: Color(0xFFA5B7FF),
+                activeColor: Colors.white,
+                gap: 8,
+                iconSize: 20,
+                textSize: 10,
+                padding: EdgeInsets.all(6),
+                selectedIndex: _selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
 
-                // Switch between pages based on the selected tab index
-                if (index == 0) {
-                  // Navigate to the Entries page (replace Placeholder() with your actual page)
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => YourEntriesPage()));
-                } else if (index == 1) {
-                  // Navigate to the Dashboard page (replace Placeholder() with your actual page)
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => homePage(onTap: () {}),
-                    ),
-                  );
-                } else if (index == 2) {
-                  // Navigate to the Tasks page (replace taskPage() with your actual page)
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => taskPage(onTap: () {}),
-                    ),
-                  );
-                }
-              },
-              tabs: [
-                GButton(
-                  icon: Icons.book_rounded,
-                  text: 'Entries',
-                ),
-                GButton(
-                  icon: Icons.dashboard_rounded,
-                  text: 'Dashboard',
-                ),
-                GButton(
-                  icon: Icons.task_alt_rounded,
-                  text: 'Tasks',
-                ),
-              ],
+                  // Switch between pages based on the selected tab index
+                  if (index == 0) {
+                    // Navigate to the Entries page (replace Placeholder() with your actual page)
+                    // Navigator.push(context, MaterialPageRoute(builder: (context) => YourEntriesPage()));
+                  } else if (index == 1) {
+                    // Navigate to the Dashboard page (replace Placeholder() with your actual page)
+                  } else if (index == 2) {
+                    // Navigate to the Tasks page (replace taskPage() with your actual page)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => taskPage(onTap: () {}),
+                      ),
+                    );
+                  }
+                },
+                tabs: [
+                  GButton(
+                    icon: Icons.book_rounded,
+                    text: 'Entries',
+                  ),
+                  GButton(
+                    icon: Icons.dashboard_rounded,
+                    text: 'Dashboard',
+                  ),
+                  GButton(
+                    icon: Icons.task_alt_rounded,
+                    text: 'Tasks',
+                  ),
+                ],
+              ),
             ),
           ),
         ),
