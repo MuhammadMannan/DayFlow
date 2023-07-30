@@ -5,21 +5,32 @@ import 'package:dayflow/pages/taskPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 import '../components/dateTile.dart';
 import '../components/taskTile.dart';
 
-class homePage extends StatelessWidget {
-  const homePage({super.key});
+// ... (your existing imports)
+
+class homePage extends StatefulWidget {
+  const homePage({Key? key, required Null Function() onTap}) : super(key: key);
+
+  @override
+  State<homePage> createState() => _homePageState();
+}
+
+class _homePageState extends State<homePage> {
+  int _selectedIndex = 1;
 
   void signUserOut(BuildContext context) {
     FirebaseAuth.instance.signOut().then((_) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-            builder: (context) => signin(
-                  onTap: () {},
-                )),
+          builder: (context) => signin(
+            onTap: () {},
+          ),
+        ),
         (route) => false,
       );
     }).catchError((error) {
@@ -87,12 +98,78 @@ class homePage extends StatelessWidget {
                   },
                   child: taskTile(),
                 ),
-
                 //date container
-                dateTile()
+                dateTile(),
               ],
             ),
           ],
+        ),
+      ),
+
+      //navigation bar
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 15),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Color(0xFF234EF3),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GNav(
+              tabBorderRadius: 5,
+              tabBackgroundColor: Color(0xFFA5B7FF),
+              backgroundColor: Color(0xFF234EF3),
+              color: Color(0xFFA5B7FF),
+              activeColor: Colors.white,
+              gap: 8,
+              iconSize: 20,
+              textSize: 10,
+              padding: EdgeInsets.all(6),
+              selectedIndex: _selectedIndex,
+              onTabChange: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+
+                // Switch between pages based on the selected tab index
+                if (index == 0) {
+                  // Navigate to the Entries page (replace Placeholder() with your actual page)
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => YourEntriesPage()));
+                } else if (index == 1) {
+                  // Navigate to the Dashboard page (replace Placeholder() with your actual page)
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => homePage(onTap: () {}),
+                    ),
+                  );
+                } else if (index == 2) {
+                  // Navigate to the Tasks page (replace taskPage() with your actual page)
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => taskPage(onTap: () {}),
+                    ),
+                  );
+                }
+              },
+              tabs: [
+                GButton(
+                  icon: Icons.book_rounded,
+                  text: 'Entries',
+                ),
+                GButton(
+                  icon: Icons.dashboard_rounded,
+                  text: 'Dashboard',
+                ),
+                GButton(
+                  icon: Icons.task_alt_rounded,
+                  text: 'Tasks',
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

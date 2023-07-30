@@ -1,6 +1,5 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 import 'package:dayflow/pages/homePage.dart';
-import 'package:dayflow/pages/taskPage.dart';
 import 'package:dayflow/pages/register.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -53,9 +52,13 @@ class _signinState extends State<signin> {
       );
 
       // Authentication successful, navigate to HomePage
+      // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => homePage()),
+        MaterialPageRoute(
+            builder: (context) => homePage(
+                  onTap: () {},
+                )),
       );
     } on FirebaseAuthException catch (e) {
       // Authentication failed, show error message
