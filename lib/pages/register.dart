@@ -1,9 +1,10 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, depend_on_referenced_packages
 import 'package:dayflow/pages/signin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class registerPage extends StatefulWidget {
   final Function() onTap;
@@ -21,6 +22,8 @@ class _registerPageState extends State<registerPage> {
 
   final confirmPasswordController = TextEditingController();
 
+  CollectionReference users = FirebaseFirestore.instance.collection('users');
+
   //error message to user
   void showErrorMessage(String message) {
     showDialog(
@@ -36,7 +39,8 @@ class _registerPageState extends State<registerPage> {
   }
 
   void signUserUp() async {
-    //show a loading circle
+    print("signing in with firebase");
+    // show loading circle
     showDialog(
       context: context,
       builder: (context) {
@@ -46,23 +50,47 @@ class _registerPageState extends State<registerPage> {
       },
     );
 
+    // try creating user
     try {
-      //check is password and confirm password is the same
+      //checking if password is confirmed
       if (passwordController.text == confirmPasswordController.text) {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
         );
+
+        // adding user details
+        addUserDetails(emailController.text.trim()); // Trim the email here
       } else {
-        //show error message, passwords do not match
-        showErrorMessage('Passwords do not match!');
+        // show error message, passwords don't match
+        showErrorMessage("Passwords don't match");
       }
 
+      // pop the loading circle
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
+      // pop loading circle
       Navigator.pop(context);
-      showErrorMessage(e.code);
+      // wrong email
+      if (e.code == 'invalid-email' || e.code == 'user-not-found') {
+        //show error to user
+        showErrorMessage("Incorrect Email");
+      }
+
+      // wrong password
+      else if (e.code == 'wrong-password') {
+        // show error to user
+        showErrorMessage("Incorrect Password");
+      }
     }
+  }
+
+  Future<void> addUserDetails(String email) async {
+    return users
+        .doc(email)
+        .set({'email': email})
+        .then((value) => print("User Added"))
+        .catchError((error) => print("Failed to add user: $error"));
   }
 
   @override

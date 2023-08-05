@@ -1,14 +1,72 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:dayflow/components/radioWidget.dart';
+import 'package:dayflow/components/sign_in_button.dart';
 import 'package:dayflow/components/textHeadingStyle.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class addTaskModal extends StatelessWidget {
-  const addTaskModal({
+class addTaskModal extends StatefulWidget {
+  addTaskModal({
     super.key,
   });
+
+  @override
+  State<addTaskModal> createState() => _addTaskModalState();
+}
+
+class _addTaskModalState extends State<addTaskModal> {
+  @override
+  void initState() {
+    super.initState();
+    getUserEmailAndName();
+  }
+
+  final taskName = TextEditingController();
+
+  final taskDesc = TextEditingController();
+
+  final user = FirebaseAuth.instance.currentUser!;
+
+  String userEmail = "";
+
+  String formatDate(DateTime date, String pattern) {
+    return DateFormat(pattern).format(date);
+  }
+
+  CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+  void getUserEmailAndName() async {
+    // Check if the user is signed in and has an email
+    if (user.email != null) {
+      userEmail = user.email!;
+      print('User Email: $userEmail');
+    }
+  }
+
+  Future<void> addTaskDetails(String taskName, String taskDesc) async {
+    DateTime today = DateTime.now();
+    String formattedDate = formatDate(today, "M-d-y");
+
+    // Check if the user already has a goal set for the next day
+    DocumentSnapshot goalsSnapshot =
+        await users.doc(userEmail).collection('goals').doc(formattedDate).get();
+
+    // If the user doesn't have a goal for the next day, add the new goal
+    return users
+        .doc(userEmail)
+        .collection('tasks')
+        .doc(formattedDate) // Use the formatted date as the document ID
+        .set({
+          'taskName': taskName,
+          'taskDesc': taskDesc,
+        })
+        .then((value) => print("Task Added"))
+        .catchError((error) => print("Failed to add task: $error"));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +101,7 @@ class addTaskModal extends StatelessWidget {
           ),
           Gap(12),
           TextField(
+            controller: taskName,
             decoration: InputDecoration(
               fillColor: Colors.white,
               filled: true,
@@ -64,6 +123,7 @@ class addTaskModal extends StatelessWidget {
           ),
           Gap(12),
           TextField(
+            controller: taskDesc,
             maxLines: 3,
             decoration: InputDecoration(
               fillColor: Colors.white,
@@ -106,6 +166,13 @@ class addTaskModal extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          MySignInButton(
+            onTap: () {
+              addTaskDetails(taskName.text,
+                  taskDesc.text); // Call the function inside the onTap callback
+            },
+            text: 'Add Task',
           )
         ],
       ),

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
+import '../components/addTaskModal.dart';
 import '../components/dateTile.dart';
 import '../components/taskTile.dart';
 
@@ -78,31 +79,83 @@ class _homePageState extends State<homePage> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          children: [
-            const Gap(12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => taskPage(
-                          onTap: () {},
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              const Gap(12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => taskPage(
+                            onTap: () {},
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: taskTile(),
+                      );
+                    },
+                    child: taskTile(),
+                  ),
+                  //date container
+                  dateTile(),
+                ],
+              ),
+              FractionallySizedBox(
+                widthFactor: 0.8,
+                child: Column(
+                  children: [
+                    Gap(12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Today\'s Tasks',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF234EF3)),
+                            ),
+                            Text(
+                              'Tuesday July 18',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        Gap(12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0XFFD5E8FA),
+                            foregroundColor: Colors.blue.shade700,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () => showModalBottomSheet(
+                            isScrollControlled: true,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            context: context,
+                            builder: (context) => addTaskModal(),
+                          ),
+                          child: Text(
+                            'Add Task',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                //date container
-                dateTile(),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
 
