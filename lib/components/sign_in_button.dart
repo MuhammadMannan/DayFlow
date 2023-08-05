@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MySignInButton extends StatelessWidget {
   final VoidCallback onTap;
@@ -18,12 +17,12 @@ class MySignInButton extends StatelessWidget {
             color: Color(0xFF234EF3),
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
-              BoxShadow(
-                color: Color(0xFF84B1F3), // Shadow color
-                blurRadius: 27, // Blur radius
-                spreadRadius: 0, // Spread radius
-                offset: Offset(0, 0), // Offset in X and Y directions
-              ),
+              // BoxShadow(
+              //   color: Color(0xFF84B1F3), // Shadow color
+              //   blurRadius: 27, // Blur radius
+              //   spreadRadius: 0, // Spread radius
+              //   offset: Offset(0, 0), // Offset in X and Y directions
+              // ),
             ],
           ),
           child: Center(
@@ -31,8 +30,10 @@ class MySignInButton extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 text,
-                style:
-                    GoogleFonts.robotoMono(color: Colors.white, fontSize: 18),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),

@@ -25,6 +25,8 @@ class _addTaskModalState extends State<addTaskModal> {
     getUserEmailAndName();
   }
 
+  String? selectedCategory;
+
   final taskName = TextEditingController();
 
   final taskDesc = TextEditingController();
@@ -47,22 +49,39 @@ class _addTaskModalState extends State<addTaskModal> {
     }
   }
 
-  Future<void> addTaskDetails(String taskName, String taskDesc) async {
-    DateTime today = DateTime.now();
-    String formattedDate = formatDate(today, "M-d-y");
+// Future<void> addTaskDetails(String taskName, String taskDesc, String category) async {
+//   DateTime today = DateTime.now();
+//   String formattedDate = formatDate(today, "M-d-y");
 
-    // Check if the user already has a goal set for the next day
-    DocumentSnapshot goalsSnapshot =
-        await users.doc(userEmail).collection('goals').doc(formattedDate).get();
+//   // Check if the user already has a goal set for the next day
+//   DocumentSnapshot goalsSnapshot = await users.doc(userEmail).collection('goals').doc(formattedDate).get();
 
-    // If the user doesn't have a goal for the next day, add the new goal
+//   // If the user doesn't have a goal for the next day, add the new goal
+//   return users
+//       .doc(userEmail)
+//       .collection('tasks')
+//       .doc(formattedDate) // Use the formatted date as the document ID
+//       .set({
+//         'taskName': taskName,
+//         'taskDesc': taskDesc,
+//         'category': category, // Add the category to the data being saved
+//       })
+//       .then((value) => print("Task Added"))
+//       .catchError((error) => print("Failed to add task: $error"));
+// }
+
+  Future<void> addTaskDetails(
+      String taskName, String taskDesc, String category) async {
+    // Add the new task as a new document in the 'tasks' collection
     return users
         .doc(userEmail)
         .collection('tasks')
-        .doc(formattedDate) // Use the formatted date as the document ID
-        .set({
+        .add({
           'taskName': taskName,
           'taskDesc': taskDesc,
+          'category': category,
+          'createdAt': FieldValue
+              .serverTimestamp(), // Add a timestamp for ordering purposes
         })
         .then((value) => print("Task Added"))
         .catchError((error) => print("Failed to add task: $error"));
@@ -151,29 +170,51 @@ class _addTaskModalState extends State<addTaskModal> {
                 child: radioWidget(
                   categoryColor: Colors.red,
                   titleRadio: 'Work',
+                  isSelected:
+                      selectedCategory == 'Work', // Pass isSelected flag
+                  onSelected: () {
+                    setState(() {
+                      selectedCategory = 'Work';
+                    });
+                  },
                 ),
               ),
               Expanded(
                 child: radioWidget(
                   categoryColor: Colors.blue,
                   titleRadio: 'School',
+                  isSelected:
+                      selectedCategory == 'School', // Pass isSelected flag
+                  onSelected: () {
+                    setState(() {
+                      selectedCategory = 'School';
+                    });
+                  },
                 ),
               ),
               Expanded(
                 child: radioWidget(
                   categoryColor: Colors.green,
                   titleRadio: 'Person',
+                  isSelected:
+                      selectedCategory == 'Person', // Pass isSelected flag
+                  onSelected: () {
+                    setState(() {
+                      selectedCategory = 'Person';
+                    });
+                  },
                 ),
               ),
             ],
           ),
+          Gap(30),
           MySignInButton(
             onTap: () {
-              addTaskDetails(taskName.text,
-                  taskDesc.text); // Call the function inside the onTap callback
+              addTaskDetails(taskName.text, taskDesc.text,
+                  selectedCategory!); // Pass the selected category to the function
             },
             text: 'Add Task',
-          )
+          ),
         ],
       ),
     );
