@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
 
 class dateTile extends StatelessWidget {
   const dateTile({
@@ -10,36 +11,42 @@ class dateTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    DateTime currentDate = DateTime.now();
+    String formattedDate = DateFormat('EEEE').format(currentDate);
+    String formattedMonth = DateFormat('MMMM d').format(currentDate);
+    String formattedYear = DateFormat('y').format(currentDate);
     return Container(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Column(
-              children: [
-                Text(
-                  'Tuesday',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                      color: Color(0xFF234EF3)),
-                ),
-                Text(
-                  'July 18',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                      color: Color(0xFF234EF3)),
-                ),
-                Text(
-                  '2023',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                      color: Color(0xFF234EF3)),
-                ),
-              ],
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: Color(0xFF234EF3)),
+                  ),
+                  Text(
+                    formattedMonth,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: Color(0xFF234EF3)),
+                  ),
+                  Text(
+                    formattedYear,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: Color(0xFF234EF3)),
+                  ),
+                ],
+              ),
             ),
             Gap(10),
             Text(

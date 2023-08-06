@@ -39,8 +39,7 @@ class _registerPageState extends State<registerPage> {
   }
 
   void signUserUp() async {
-    print("signing in with firebase");
-    // show loading circle
+    // Show loading circle
     showDialog(
       context: context,
       builder: (context) {
@@ -50,40 +49,105 @@ class _registerPageState extends State<registerPage> {
       },
     );
 
-    // try creating user
     try {
-      //checking if password is confirmed
+      // Checking if password is confirmed
       if (passwordController.text == confirmPasswordController.text) {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
         );
 
-        // adding user details
-        addUserDetails(emailController.text.trim()); // Trim the email here
+        // Adding user details
+        await addUserDetails(
+            emailController.text.trim()); // Trim the email here
+
+        // Pop the loading circle
+        Navigator.pop(context);
+
+        // Show "Welcome to DayFlow" message
+        final snackBar = SnackBar(
+          content: Text('Welcome to DayFlow'),
+          duration: Duration(seconds: 2),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+        // Delay the navigation to the sign-in page
+        Future.delayed(Duration(seconds: 2), () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => signin(
+                onTap: () {},
+              ),
+            ),
+          );
+        });
       } else {
-        // show error message, passwords don't match
+        // Show error message, passwords don't match
         showErrorMessage("Passwords don't match");
+        // Pop the loading circle
+        Navigator.pop(context);
       }
-
-      // pop the loading circle
-      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      // pop loading circle
+      // Pop loading circle
       Navigator.pop(context);
-      // wrong email
-      if (e.code == 'invalid-email' || e.code == 'user-not-found') {
-        //show error to user
-        showErrorMessage("Incorrect Email");
-      }
 
-      // wrong password
-      else if (e.code == 'wrong-password') {
-        // show error to user
+      if (e.code == 'invalid-email' || e.code == 'user-not-found') {
+        // Show error to user
+        showErrorMessage("Incorrect Email");
+      } else if (e.code == 'wrong-password') {
+        // Show error to user
         showErrorMessage("Incorrect Password");
       }
     }
   }
+
+  // void signUserUp() async {
+  //   print("signing in with firebase");
+  //   // show loading circle
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return const Center(
+  //         child: CircularProgressIndicator(),
+  //       );
+  //     },
+  //   );
+
+  //   // try creating user
+  //   try {
+  //     //checking if password is confirmed
+  //     if (passwordController.text == confirmPasswordController.text) {
+  //       await FirebaseAuth.instance.createUserWithEmailAndPassword(
+  //         email: emailController.text,
+  //         password: passwordController.text,
+  //       );
+
+  //       // adding user details
+  //       addUserDetails(emailController.text.trim()); // Trim the email here
+  //     } else {
+  //       // show error message, passwords don't match
+  //       showErrorMessage("Passwords don't match");
+  //     }
+
+  //     // pop the loading circle
+  //     Navigator.pop(context);
+  //   } on FirebaseAuthException catch (e) {
+  //     // pop loading circle
+  //     Navigator.pop(context);
+  //     // wrong email
+  //     if (e.code == 'invalid-email' || e.code == 'user-not-found') {
+  //       //show error to user
+  //       showErrorMessage("Incorrect Email");
+  //     }
+
+  //     // wrong password
+  //     else if (e.code == 'wrong-password') {
+  //       // show error to user
+  //       showErrorMessage("Incorrect Password");
+  //     }
+  //   }
+  // }
 
   Future<void> addUserDetails(String email) async {
     return users

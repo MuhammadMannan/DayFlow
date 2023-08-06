@@ -49,6 +49,10 @@ class _addTaskModalState extends State<addTaskModal> {
     }
   }
 
+  void closeAddTaskModal() {
+    Navigator.pop(context); // Close the modal
+  }
+
 // Future<void> addTaskDetails(String taskName, String taskDesc, String category) async {
 //   DateTime today = DateTime.now();
 //   String formattedDate = formatDate(today, "M-d-y");
@@ -210,8 +214,13 @@ class _addTaskModalState extends State<addTaskModal> {
           Gap(30),
           MySignInButton(
             onTap: () {
-              addTaskDetails(taskName.text, taskDesc.text,
-                  selectedCategory!); // Pass the selected category to the function
+              addTaskDetails(
+                taskName.text,
+                taskDesc.text,
+                selectedCategory!,
+              );
+
+              closeAddTaskModal(); // Close the modal after adding the task
             },
             text: 'Add Task',
           ),

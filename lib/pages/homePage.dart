@@ -123,7 +123,7 @@ class _homePageState extends State<homePage> {
                                   color: Color(0xFF234EF3)),
                             ),
                             Text(
-                              'Tuesday July 18',
+                              'Let\'s get stuff done',
                               style: TextStyle(color: Colors.grey),
                             ),
                           ],
