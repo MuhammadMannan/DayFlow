@@ -165,12 +165,36 @@ class _homePageState extends State<homePage> {
                       ],
                     ),
                     Gap(12),
-                    Container(
-                      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: getTasksStream(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            final tasks = snapshot.data!.docs;
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: getTasksStream(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        } else if (snapshot.hasData) {
+                          final tasks = snapshot.data!.docs;
+                          if (tasks.isEmpty) {
+                            return Center(
+                                child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Congrats you don't have any tasks for today!",
+                                  style: TextStyle(
+                                      color: Colors.grey.shade400,
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                                Gap(35),
+                                Icon(
+                                  Icons.task_alt_rounded,
+                                  size: 100,
+                                  color: Colors.green,
+                                )
+                              ],
+                            ));
+                          } else {
                             return ListView.builder(
                               shrinkWrap: true,
                               itemCount: tasks.length,
@@ -200,6 +224,18 @@ class _homePageState extends State<homePage> {
                                         offset: Offset(0, 3),
                                       ),
                                     ],
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF234EF3), // Blue color
+                                        Colors.white,
+                                      ],
+                                      stops: [
+                                        0.05,
+                                        0.02,
+                                      ], // Adjust these values as needed
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
                                   ),
                                   child: ListTile(
                                     title: Text(
@@ -207,7 +243,7 @@ class _homePageState extends State<homePage> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
-                                        color: Colors.black,
+                                        color: Color(0xFF234EF3),
                                       ),
                                     ),
                                     subtitle: Column(
@@ -222,22 +258,38 @@ class _homePageState extends State<homePage> {
                                           ),
                                         ),
                                         SizedBox(height: 4),
-                                        Text(
-                                          'Category: $category',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.blue,
-                                          ),
+                                        Row(
+                                          children: [
+                                            if (category == 'School')
+                                              Icon(
+                                                Icons.school,
+                                                color: Colors.blue,
+                                                size: 24,
+                                              ),
+                                            if (category == 'Work')
+                                              Icon(
+                                                Icons.work,
+                                                color: Colors.blue,
+                                                size: 24,
+                                              ),
+                                            if (category == 'Person')
+                                              Icon(
+                                                Icons.person,
+                                                color: Colors.blue,
+                                                size: 24,
+                                              ),
+                                            Spacer(), // Add spacer to create space between icons
+                                            IconButton(
+                                              icon: Icon(Icons.done),
+                                              onPressed: () {
+                                                // Update the task's isComplete value to true
+                                                updateTaskCompletionStatus(
+                                                    taskId, true);
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ],
-                                    ),
-                                    trailing: IconButton(
-                                      icon: Icon(Icons.done),
-                                      onPressed: () {
-                                        // Update the task's isComplete value to true
-                                        updateTaskCompletionStatus(
-                                            taskId, true);
-                                      },
                                     ),
                                     onTap: () {
                                       // Implement a function to handle tile click
@@ -247,13 +299,13 @@ class _homePageState extends State<homePage> {
                                 );
                               },
                             );
-                          } else if (snapshot.hasError) {
-                            return Text("Error: ${snapshot.error}");
-                          } else {
-                            return CircularProgressIndicator();
                           }
-                        },
-                      ),
+                        } else if (snapshot.hasError) {
+                          return Text("Error: ${snapshot.error}");
+                        } else {
+                          return CircularProgressIndicator();
+                        }
+                      },
                     ),
                     //card list of tasks
                   ],
