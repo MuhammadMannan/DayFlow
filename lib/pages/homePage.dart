@@ -26,12 +26,17 @@ class _homePageState extends State<homePage> {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getTasksStream() {
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
+    DateTime today = DateTime.now();
+    DateTime todayStart = DateTime(today.year, today.month, today.day);
+    DateTime todayEnd = todayStart.add(Duration(days: 1));
+
     return FirebaseFirestore.instance
         .collection('users')
         .doc(userEmail)
         .collection('tasks')
-        .where('isComplete',
-            isEqualTo: false) // Filter tasks with isComplete set to false
+        .where('isComplete', isEqualTo: false)
+        .where('createdAt', isGreaterThanOrEqualTo: todayStart)
+        .where('createdAt', isLessThan: todayEnd)
         .snapshots();
   }
 
@@ -195,9 +200,11 @@ class _homePageState extends State<homePage> {
                               ],
                             ));
                           } else {
-                            return ListView.builder(
+                            return ListView.separated(
                               shrinkWrap: true,
                               itemCount: tasks.length,
+                              separatorBuilder: (context, index) =>
+                                  SizedBox(height: 16),
                               itemBuilder: (context, index) {
                                 final taskName = tasks[index]['taskName'];
                                 final taskDesc = tasks[index]['taskDesc'];
@@ -207,96 +214,189 @@ class _homePageState extends State<homePage> {
                                     tasks[index].id; // Get the document ID
 
                                 if (isComplete) {
-                                  // Skip completed tasks
                                   return SizedBox.shrink();
                                 }
+
+                                // Define an Icon widget based on the category
+                                Icon? categoryIcon;
+                                if (category == 'School') {
+                                  categoryIcon = Icon(Icons.school,
+                                      color: Colors.blue, size: 24);
+                                } else if (category == 'Work') {
+                                  categoryIcon = Icon(Icons.work,
+                                      color: Colors.blue, size: 24);
+                                } else if (category == 'Person') {
+                                  categoryIcon = Icon(Icons.person,
+                                      color: Colors.blue, size: 24);
+                                }
                                 return Container(
-                                  margin: EdgeInsets.symmetric(vertical: 6),
-                                  padding: EdgeInsets.all(8),
+                                  width: double.infinity,
+                                  height: 112,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.2),
-                                        spreadRadius: 2,
-                                        blurRadius: 4,
-                                        offset: Offset(0, 3),
-                                      ),
-                                    ],
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFF234EF3), // Blue color
-                                        Colors.white,
-                                      ],
-                                      stops: [
-                                        0.05,
-                                        0.02,
-                                      ], // Adjust these values as needed
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  child: ListTile(
-                                    title: Text(
-                                      taskName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Color(0xFF234EF3),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFF234EF3),
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(16),
+                                              bottomLeft: Radius.circular(16)),
+                                        ),
+                                        width: 20,
                                       ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          taskDesc,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 15),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              ListTile(
+                                                contentPadding: EdgeInsets.zero,
+                                                title: Text(taskName),
+                                                subtitle: Text(taskDesc),
+                                                trailing: Transform.scale(
+                                                  scale: 1.5,
+                                                  child: Checkbox(
+                                                    activeColor:
+                                                        Color(0xFF234EF3),
+                                                    shape: const CircleBorder(),
+                                                    value:
+                                                        isComplete, // Use the value from Firestore
+                                                    onChanged: (value) async {
+                                                      // Update the task's isComplete value to true
+                                                      await updateTaskCompletionStatus(
+                                                          taskId, true);
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                              Transform.translate(
+                                                offset: const Offset(0, -12),
+                                                child: Container(
+                                                    child: Column(
+                                                  children: [
+                                                    Divider(
+                                                      thickness: 1.5,
+                                                      color:
+                                                          Colors.grey.shade100,
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        if (categoryIcon !=
+                                                            null)
+                                                          categoryIcon,
+                                                        SizedBox(
+                                                            width:
+                                                                8), // Add spacing
+                                                        Text(category),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                )),
+                                              )
+                                            ],
                                           ),
                                         ),
-                                        SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            if (category == 'School')
-                                              Icon(
-                                                Icons.school,
-                                                color: Colors.blue,
-                                                size: 24,
-                                              ),
-                                            if (category == 'Work')
-                                              Icon(
-                                                Icons.work,
-                                                color: Colors.blue,
-                                                size: 24,
-                                              ),
-                                            if (category == 'Person')
-                                              Icon(
-                                                Icons.person,
-                                                color: Colors.blue,
-                                                size: 24,
-                                              ),
-                                            Spacer(), // Add spacer to create space between icons
-                                            IconButton(
-                                              icon: Icon(Icons.done),
-                                              onPressed: () {
-                                                // Update the task's isComplete value to true
-                                                updateTaskCompletionStatus(
-                                                    taskId, true);
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      // Implement a function to handle tile click
-                                      // You can navigate to a task details page here
-                                    },
+                                      )
+                                    ],
                                   ),
                                 );
+                                // return Container(
+                                //   // margin: EdgeInsets.symmetric(vertical: 6),
+                                //   padding: EdgeInsets.symmetric(horizontal: 24),
+                                //   // padding: EdgeInsets.symmetric(
+                                //   //     horizontal: 24, vertical: 12),
+                                //   decoration: BoxDecoration(
+                                //     color: Colors.white,
+                                //     borderRadius: BorderRadius.circular(10),
+                                //     boxShadow: [
+                                //       BoxShadow(
+                                //         color: Colors.grey.withOpacity(0.2),
+                                //         spreadRadius: 2,
+                                //         blurRadius: 4,
+                                //         offset: Offset(0, 3),
+                                //       ),
+                                //     ],
+                                //     gradient: LinearGradient(
+                                //       colors: [
+                                //         Color(0xFF234EF3), // Blue color
+                                //         Colors.white,
+                                //       ],
+                                //       stops: [
+                                //         0.06,
+                                //         0.02,
+                                //       ], // Adjust these values as needed
+                                //       begin: Alignment.centerLeft,
+                                //       end: Alignment.centerRight,
+                                //     ),
+                                //   ),
+                                //   child: ListTile(
+                                //     title: Text(
+                                //       taskName,
+                                //       style: TextStyle(
+                                //         fontWeight: FontWeight.bold,
+                                //         fontSize: 16,
+                                //         color: Color(0xFF234EF3),
+                                //       ),
+                                //     ),
+                                //     subtitle: Column(
+                                //       crossAxisAlignment:
+                                //           CrossAxisAlignment.start,
+                                //       children: [
+                                //         Text(
+                                //           taskDesc,
+                                //           style: TextStyle(
+                                //             fontSize: 14,
+                                //             color: Colors.grey[600],
+                                //           ),
+                                //         ),
+                                //         SizedBox(height: 4),
+                                //         Row(
+                                //           children: [
+                                //             if (category == 'School')
+                                //               Icon(
+                                //                 Icons.school,
+                                //                 color: Colors.blue,
+                                //                 size: 24,
+                                //               ),
+                                //             if (category == 'Work')
+                                //               Icon(
+                                //                 Icons.work,
+                                //                 color: Colors.blue,
+                                //                 size: 24,
+                                //               ),
+                                //             if (category == 'Person')
+                                //               Icon(
+                                //                 Icons.person,
+                                //                 color: Colors.blue,
+                                //                 size: 24,
+                                //               ),
+                                //             Spacer(), // Add spacer to create space between icons
+                                //             IconButton(
+                                //               icon: Icon(Icons.done),
+                                //               onPressed: () {
+                                //                 // Update the task's isComplete value to true
+                                //                 updateTaskCompletionStatus(
+                                //                     taskId, true);
+                                //               },
+                                //             ),
+                                //           ],
+                                //         ),
+                                //       ],
+                                //     ),
+                                //     onTap: () {
+                                //       // Implement a function to handle tile click
+                                //       // You can navigate to a task details page here
+                                //     },
+                                //   ),
+                                // );
                               },
                             );
                           }

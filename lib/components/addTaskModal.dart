@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
+// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, avoid_print, invalid_return_type_for_catch_error
 
 import 'package:dayflow/components/radioWidget.dart';
 import 'package:dayflow/components/sign_in_button.dart';
@@ -45,7 +45,6 @@ class _addTaskModalState extends State<addTaskModal> {
     // Check if the user is signed in and has an email
     if (user.email != null) {
       userEmail = user.email!;
-      print('User Email: $userEmail');
     }
   }
 
@@ -84,7 +83,7 @@ class _addTaskModalState extends State<addTaskModal> {
       'isComplete': false, // Set isComplete to false by default
       'createdAt': FieldValue.serverTimestamp(),
     }).then((value) {
-      print("Task Added"); // Close the modal after adding the task
+      // Close the modal after adding the task
     }).catchError((error) => print("Failed to add task: $error"));
   }
 
