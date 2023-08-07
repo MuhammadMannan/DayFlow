@@ -77,18 +77,15 @@ class _addTaskModalState extends State<addTaskModal> {
   Future<void> addTaskDetails(
       String taskName, String taskDesc, String category) async {
     // Add the new task as a new document in the 'tasks' collection
-    return users
-        .doc(userEmail)
-        .collection('tasks')
-        .add({
-          'taskName': taskName,
-          'taskDesc': taskDesc,
-          'category': category,
-          'createdAt': FieldValue
-              .serverTimestamp(), // Add a timestamp for ordering purposes
-        })
-        .then((value) => print("Task Added"))
-        .catchError((error) => print("Failed to add task: $error"));
+    return users.doc(userEmail).collection('tasks').add({
+      'taskName': taskName,
+      'taskDesc': taskDesc,
+      'category': category,
+      'isComplete': false, // Set isComplete to false by default
+      'createdAt': FieldValue.serverTimestamp(),
+    }).then((value) {
+      print("Task Added"); // Close the modal after adding the task
+    }).catchError((error) => print("Failed to add task: $error"));
   }
 
   @override

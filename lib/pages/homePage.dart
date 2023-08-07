@@ -1,5 +1,6 @@
-// ignore_for_file: sort_child_properties_last, prefer_const_constructors, prefer_const_literals_to_create_immutables, file_names
+// ignore_for_file: sort_child_properties_last, prefer_const_constructors, prefer_const_literals_to_create_immutables, file_names, camel_case_types, invalid_return_type_for_catch_error
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dayflow/pages/signin.dart';
 import 'package:dayflow/pages/taskPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,6 +23,30 @@ class homePage extends StatefulWidget {
 
 class _homePageState extends State<homePage> {
   int _selectedIndex = 1;
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> getTasksStream() {
+    String? userEmail = FirebaseAuth.instance.currentUser?.email;
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userEmail)
+        .collection('tasks')
+        .where('isComplete',
+            isEqualTo: false) // Filter tasks with isComplete set to false
+        .snapshots();
+  }
+
+  Future<void> updateTaskCompletionStatus(
+      String taskId, bool isComplete) async {
+    String? userEmail = FirebaseAuth.instance.currentUser?.email;
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userEmail)
+        .collection('tasks')
+        .doc(taskId)
+        .update({'isComplete': isComplete}).then((_) {
+      print("Task completion status updated");
+    }).catchError((error) => print("Failed to update task status: $error"));
+  }
 
   void signUserOut(BuildContext context) {
     FirebaseAuth.instance.signOut().then((_) {
@@ -87,19 +112,7 @@ class _homePageState extends State<homePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => taskPage(
-                            onTap: () {},
-                          ),
-                        ),
-                      );
-                    },
-                    child: taskTile(),
-                  ),
+                  TaskTile(),
                   //date container
                   dateTile(),
                 ],
@@ -151,6 +164,98 @@ class _homePageState extends State<homePage> {
                         ),
                       ],
                     ),
+                    Gap(12),
+                    Container(
+                      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: getTasksStream(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            final tasks = snapshot.data!.docs;
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: tasks.length,
+                              itemBuilder: (context, index) {
+                                final taskName = tasks[index]['taskName'];
+                                final taskDesc = tasks[index]['taskDesc'];
+                                final category = tasks[index]['category'];
+                                final isComplete = tasks[index]['isComplete'];
+                                final taskId =
+                                    tasks[index].id; // Get the document ID
+
+                                if (isComplete) {
+                                  // Skip completed tasks
+                                  return SizedBox.shrink();
+                                }
+                                return Container(
+                                  margin: EdgeInsets.symmetric(vertical: 6),
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.2),
+                                        spreadRadius: 2,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ListTile(
+                                    title: Text(
+                                      taskName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          taskDesc,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Category: $category',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(Icons.done),
+                                      onPressed: () {
+                                        // Update the task's isComplete value to true
+                                        updateTaskCompletionStatus(
+                                            taskId, true);
+                                      },
+                                    ),
+                                    onTap: () {
+                                      // Implement a function to handle tile click
+                                      // You can navigate to a task details page here
+                                    },
+                                  ),
+                                );
+                              },
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text("Error: ${snapshot.error}");
+                          } else {
+                            return CircularProgressIndicator();
+                          }
+                        },
+                      ),
+                    ),
+                    //card list of tasks
                   ],
                 ),
               ),
@@ -172,6 +277,7 @@ class _homePageState extends State<homePage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: GNav(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 tabBorderRadius: 5,
                 tabBackgroundColor: Color(0xFFA5B7FF),
                 backgroundColor: Color(0xFF234EF3),
@@ -206,15 +312,15 @@ class _homePageState extends State<homePage> {
                 tabs: [
                   GButton(
                     icon: Icons.book_rounded,
-                    text: 'Entries',
+                    //text: 'Entries',
                   ),
                   GButton(
                     icon: Icons.dashboard_rounded,
-                    text: 'Dashboard',
+                    //text: 'Dashboard',
                   ),
                   GButton(
                     icon: Icons.task_alt_rounded,
-                    text: 'Tasks',
+                    //text: 'Tasks',
                   ),
                 ],
               ),
