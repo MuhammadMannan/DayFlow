@@ -29,7 +29,7 @@ class _TaskTileState extends State<TaskTile> {
   Widget build(BuildContext context) {
     DateTime today = DateTime.now();
     DateTime todayStart = DateTime(today.year, today.month, today.day);
-    DateTime todayEnd = todayStart.add(Duration(days: 1));
+    DateTime todayEnd = todayStart.add(const Duration(days: 1));
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
@@ -41,15 +41,47 @@ class _TaskTileState extends State<TaskTile> {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return Text('no tasks');
+          return const Text('no tasks');
         }
 
-        final completedTasks = snapshot.data!.docs
-            .where((doc) => doc['isComplete'] == true)
-            .toList()
-            .length;
+        final tasks = snapshot.data!.docs;
 
-        final totalTasks = snapshot.data!.docs.length;
+        if (tasks.isEmpty) {
+          return Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF234EF3),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            width: 160,
+            height: 160,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    'No tasks\nfor today',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25),
+                    textAlign: TextAlign.center,
+                  ),
+                  Icon(
+                    Icons.celebration,
+                    color: Colors.white,
+                    size: 45,
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+
+        final completedTasks =
+            tasks.where((doc) => doc['isComplete'] == true).toList().length;
+
+        final totalTasks = tasks.length;
 
         // Calculate the completion percentage
         double completionPercentage =
@@ -63,8 +95,8 @@ class _TaskTileState extends State<TaskTile> {
             color: const Color(0xFF234EF3),
             borderRadius: BorderRadius.circular(16),
           ),
-          width: 150,
-          height: 150,
+          width: 160,
+          height: 160,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Column(
@@ -93,7 +125,7 @@ class _TaskTileState extends State<TaskTile> {
                     child: LinearProgressIndicator(
                       value: completionPercentage / 100,
                       backgroundColor: Colors.white,
-                      valueColor: AlwaysStoppedAnimation<Color>(
+                      valueColor: const AlwaysStoppedAnimation<Color>(
                         Color(0xFF95ABFF),
                       ),
                     ),

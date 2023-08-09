@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, avoid_print, invalid_return_type_for_catch_error
+// ignore_for_file: avoid_print, invalid_return_type_for_catch_error
 
 import 'package:dayflow/components/radioWidget.dart';
 import 'package:dayflow/components/sign_in_button.dart';
@@ -52,27 +52,6 @@ class _addTaskModalState extends State<addTaskModal> {
     Navigator.pop(context); // Close the modal
   }
 
-// Future<void> addTaskDetails(String taskName, String taskDesc, String category) async {
-//   DateTime today = DateTime.now();
-//   String formattedDate = formatDate(today, "M-d-y");
-
-//   // Check if the user already has a goal set for the next day
-//   DocumentSnapshot goalsSnapshot = await users.doc(userEmail).collection('goals').doc(formattedDate).get();
-
-//   // If the user doesn't have a goal for the next day, add the new goal
-//   return users
-//       .doc(userEmail)
-//       .collection('tasks')
-//       .doc(formattedDate) // Use the formatted date as the document ID
-//       .set({
-//         'taskName': taskName,
-//         'taskDesc': taskDesc,
-//         'category': category, // Add the category to the data being saved
-//       })
-//       .then((value) => print("Task Added"))
-//       .catchError((error) => print("Failed to add task: $error"));
-// }
-
   Future<void> addTaskDetails(
       String taskName, String taskDesc, String category) async {
     // Add the new task as a new document in the 'tasks' collection
@@ -90,14 +69,15 @@ class _addTaskModalState extends State<addTaskModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(30),
+      padding: const EdgeInsets.all(30),
       height: MediaQuery.of(context).size.height * 0.65,
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16), color: Color(0xFFEDF3FC)),
+          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFFEDF3FC)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
+          const SizedBox(
             width: double.infinity,
             child: Text(
               'Add A Task',
@@ -108,17 +88,17 @@ class _addTaskModalState extends State<addTaskModal> {
                   color: Color(0xFF234EF3)),
             ),
           ),
-          Gap(12),
+          const Gap(12),
           Divider(
             thickness: 1.2,
             color: Colors.blue.shade100,
           ),
-          Gap(12),
-          Text(
+          const Gap(12),
+          const Text(
             'Task Name',
             style: textHeadingStyle.textStyle,
           ),
-          Gap(12),
+          const Gap(12),
           TextField(
             controller: taskName,
             decoration: InputDecoration(
@@ -126,7 +106,7 @@ class _addTaskModalState extends State<addTaskModal> {
               filled: true,
               hintText: 'Add a name for your task',
               enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.transparent),
+                borderSide: const BorderSide(color: Colors.transparent),
                 borderRadius: BorderRadius.circular(10),
               ),
               focusedBorder: OutlineInputBorder(
@@ -135,12 +115,12 @@ class _addTaskModalState extends State<addTaskModal> {
               ),
             ),
           ),
-          Gap(12),
-          Text(
+          const Gap(12),
+          const Text(
             'Description',
             style: textHeadingStyle.textStyle,
           ),
-          Gap(12),
+          const Gap(12),
           TextField(
             controller: taskDesc,
             maxLines: 3,
@@ -149,7 +129,7 @@ class _addTaskModalState extends State<addTaskModal> {
               filled: true,
               hintText: 'Add a description for your task',
               enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.transparent),
+                borderSide: const BorderSide(color: Colors.transparent),
                 borderRadius: BorderRadius.circular(10),
               ),
               focusedBorder: OutlineInputBorder(
@@ -158,12 +138,12 @@ class _addTaskModalState extends State<addTaskModal> {
               ),
             ),
           ),
-          Gap(12),
-          Text(
+          const Gap(12),
+          const Text(
             'Category',
             style: textHeadingStyle.textStyle,
           ),
-          Gap(12),
+          const Gap(12),
           Row(
             children: [
               Expanded(
@@ -207,7 +187,7 @@ class _addTaskModalState extends State<addTaskModal> {
               ),
             ],
           ),
-          Gap(30),
+          const Gap(30),
           MySignInButton(
             onTap: () {
               addTaskDetails(

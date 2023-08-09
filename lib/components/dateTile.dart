@@ -1,5 +1,3 @@
-// ignore_for_file: sort_child_properties_last, prefer_const_literals_to_create_immutables, prefer_const_constructors
-
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -63,8 +61,8 @@ class dateTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      width: 150,
-      height: 150,
+      width: 160,
+      height: 160,
     );
   }
 }

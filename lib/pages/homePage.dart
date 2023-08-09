@@ -1,6 +1,7 @@
-// ignore_for_file: sort_child_properties_last, prefer_const_constructors, prefer_const_literals_to_create_immutables, file_names, camel_case_types, invalid_return_type_for_catch_error
+// ignore_for_file: invalid_return_type_for_catch_error, avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dayflow/pages/TrendsPage.dart';
 import 'package:dayflow/pages/signin.dart';
 import 'package:dayflow/pages/taskPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,7 +29,7 @@ class _homePageState extends State<homePage> {
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
     DateTime today = DateTime.now();
     DateTime todayStart = DateTime(today.year, today.month, today.day);
-    DateTime todayEnd = todayStart.add(Duration(days: 1));
+    DateTime todayEnd = todayStart.add(const Duration(days: 1));
 
     return FirebaseFirestore.instance
         .collection('users')
@@ -119,18 +120,18 @@ class _homePageState extends State<homePage> {
                 children: [
                   TaskTile(),
                   //date container
-                  dateTile(),
+                  const dateTile(),
                 ],
               ),
               FractionallySizedBox(
-                widthFactor: 0.8,
+                widthFactor: 0.85,
                 child: Column(
                   children: [
-                    Gap(12),
+                    const Gap(12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
+                        const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
@@ -146,10 +147,10 @@ class _homePageState extends State<homePage> {
                             ),
                           ],
                         ),
-                        Gap(12),
+                        const Gap(12),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0XFFD5E8FA),
+                            backgroundColor: const Color(0XFFD5E8FA),
                             foregroundColor: Colors.blue.shade700,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -163,19 +164,19 @@ class _homePageState extends State<homePage> {
                             context: context,
                             builder: (context) => addTaskModal(),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Add Task',
                           ),
                         ),
                       ],
                     ),
-                    Gap(12),
+                    const Gap(12),
                     StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                       stream: getTasksStream(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return CircularProgressIndicator();
+                          return const CircularProgressIndicator();
                         } else if (snapshot.hasData) {
                           final tasks = snapshot.data!.docs;
                           if (tasks.isEmpty) {
@@ -191,8 +192,8 @@ class _homePageState extends State<homePage> {
                                       fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
-                                Gap(35),
-                                Icon(
+                                const Gap(35),
+                                const Icon(
                                   Icons.task_alt_rounded,
                                   size: 100,
                                   color: Colors.green,
@@ -204,7 +205,7 @@ class _homePageState extends State<homePage> {
                               shrinkWrap: true,
                               itemCount: tasks.length,
                               separatorBuilder: (context, index) =>
-                                  SizedBox(height: 16),
+                                  const SizedBox(height: 16),
                               itemBuilder: (context, index) {
                                 final taskName = tasks[index]['taskName'];
                                 final taskDesc = tasks[index]['taskDesc'];
@@ -214,19 +215,19 @@ class _homePageState extends State<homePage> {
                                     tasks[index].id; // Get the document ID
 
                                 if (isComplete) {
-                                  return SizedBox.shrink();
+                                  return const SizedBox.shrink();
                                 }
 
                                 // Define an Icon widget based on the category
                                 Icon? categoryIcon;
                                 if (category == 'School') {
-                                  categoryIcon = Icon(Icons.school,
+                                  categoryIcon = const Icon(Icons.school,
                                       color: Colors.blue, size: 24);
                                 } else if (category == 'Work') {
-                                  categoryIcon = Icon(Icons.work,
+                                  categoryIcon = const Icon(Icons.work,
                                       color: Colors.blue, size: 24);
                                 } else if (category == 'Person') {
-                                  categoryIcon = Icon(Icons.person,
+                                  categoryIcon = const Icon(Icons.person,
                                       color: Colors.blue, size: 24);
                                 }
                                 return Container(
@@ -239,7 +240,7 @@ class _homePageState extends State<homePage> {
                                   child: Row(
                                     children: [
                                       Container(
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           color: Color(0xFF234EF3),
                                           borderRadius: BorderRadius.only(
                                               topLeft: Radius.circular(16),
@@ -265,7 +266,7 @@ class _homePageState extends State<homePage> {
                                                   scale: 1.5,
                                                   child: Checkbox(
                                                     activeColor:
-                                                        Color(0xFF234EF3),
+                                                        const Color(0xFF234EF3),
                                                     shape: const CircleBorder(),
                                                     value:
                                                         isComplete, // Use the value from Firestore
@@ -292,7 +293,7 @@ class _homePageState extends State<homePage> {
                                                         if (categoryIcon !=
                                                             null)
                                                           categoryIcon,
-                                                        SizedBox(
+                                                        const SizedBox(
                                                             width:
                                                                 8), // Add spacing
                                                         Text(category),
@@ -308,102 +309,13 @@ class _homePageState extends State<homePage> {
                                     ],
                                   ),
                                 );
-                                // return Container(
-                                //   // margin: EdgeInsets.symmetric(vertical: 6),
-                                //   padding: EdgeInsets.symmetric(horizontal: 24),
-                                //   // padding: EdgeInsets.symmetric(
-                                //   //     horizontal: 24, vertical: 12),
-                                //   decoration: BoxDecoration(
-                                //     color: Colors.white,
-                                //     borderRadius: BorderRadius.circular(10),
-                                //     boxShadow: [
-                                //       BoxShadow(
-                                //         color: Colors.grey.withOpacity(0.2),
-                                //         spreadRadius: 2,
-                                //         blurRadius: 4,
-                                //         offset: Offset(0, 3),
-                                //       ),
-                                //     ],
-                                //     gradient: LinearGradient(
-                                //       colors: [
-                                //         Color(0xFF234EF3), // Blue color
-                                //         Colors.white,
-                                //       ],
-                                //       stops: [
-                                //         0.06,
-                                //         0.02,
-                                //       ], // Adjust these values as needed
-                                //       begin: Alignment.centerLeft,
-                                //       end: Alignment.centerRight,
-                                //     ),
-                                //   ),
-                                //   child: ListTile(
-                                //     title: Text(
-                                //       taskName,
-                                //       style: TextStyle(
-                                //         fontWeight: FontWeight.bold,
-                                //         fontSize: 16,
-                                //         color: Color(0xFF234EF3),
-                                //       ),
-                                //     ),
-                                //     subtitle: Column(
-                                //       crossAxisAlignment:
-                                //           CrossAxisAlignment.start,
-                                //       children: [
-                                //         Text(
-                                //           taskDesc,
-                                //           style: TextStyle(
-                                //             fontSize: 14,
-                                //             color: Colors.grey[600],
-                                //           ),
-                                //         ),
-                                //         SizedBox(height: 4),
-                                //         Row(
-                                //           children: [
-                                //             if (category == 'School')
-                                //               Icon(
-                                //                 Icons.school,
-                                //                 color: Colors.blue,
-                                //                 size: 24,
-                                //               ),
-                                //             if (category == 'Work')
-                                //               Icon(
-                                //                 Icons.work,
-                                //                 color: Colors.blue,
-                                //                 size: 24,
-                                //               ),
-                                //             if (category == 'Person')
-                                //               Icon(
-                                //                 Icons.person,
-                                //                 color: Colors.blue,
-                                //                 size: 24,
-                                //               ),
-                                //             Spacer(), // Add spacer to create space between icons
-                                //             IconButton(
-                                //               icon: Icon(Icons.done),
-                                //               onPressed: () {
-                                //                 // Update the task's isComplete value to true
-                                //                 updateTaskCompletionStatus(
-                                //                     taskId, true);
-                                //               },
-                                //             ),
-                                //           ],
-                                //         ),
-                                //       ],
-                                //     ),
-                                //     onTap: () {
-                                //       // Implement a function to handle tile click
-                                //       // You can navigate to a task details page here
-                                //     },
-                                //   ),
-                                // );
                               },
                             );
                           }
                         } else if (snapshot.hasError) {
                           return Text("Error: ${snapshot.error}");
                         } else {
-                          return CircularProgressIndicator();
+                          return const CircularProgressIndicator();
                         }
                       },
                     ),
@@ -424,21 +336,21 @@ class _homePageState extends State<homePage> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: Color(0xFF234EF3),
+              color: const Color(0xFF234EF3),
             ),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: GNav(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 tabBorderRadius: 5,
-                tabBackgroundColor: Color(0xFFA5B7FF),
-                backgroundColor: Color(0xFF234EF3),
-                color: Color(0xFFA5B7FF),
+                tabBackgroundColor: const Color(0xFFA5B7FF),
+                backgroundColor: const Color(0xFF234EF3),
+                color: const Color(0xFFA5B7FF),
                 activeColor: Colors.white,
                 gap: 8,
                 iconSize: 20,
                 textSize: 10,
-                padding: EdgeInsets.all(6),
+                padding: const EdgeInsets.all(6),
                 selectedIndex: _selectedIndex,
                 onTabChange: (index) {
                   setState(() {
@@ -446,10 +358,16 @@ class _homePageState extends State<homePage> {
                   });
 
                   // Switch between pages based on the selected tab index
-                  if (index == 0) {
+                  if (index == 1) {
                     // Navigate to the Entries page (replace Placeholder() with your actual page)
                     // Navigator.push(context, MaterialPageRoute(builder: (context) => YourEntriesPage()));
-                  } else if (index == 1) {
+                  } else if (index == 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TrendsPage(),
+                      ),
+                    );
                     // Navigate to the Dashboard page (replace Placeholder() with your actual page)
                   } else if (index == 2) {
                     // Navigate to the Tasks page (replace taskPage() with your actual page)
@@ -461,7 +379,7 @@ class _homePageState extends State<homePage> {
                     );
                   }
                 },
-                tabs: [
+                tabs: const [
                   GButton(
                     icon: Icons.book_rounded,
                     //text: 'Entries',

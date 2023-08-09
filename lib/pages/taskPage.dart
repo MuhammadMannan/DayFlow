@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:dayflow/pages/homePage.dart';
 import 'package:dayflow/pages/signin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -39,9 +37,9 @@ class _taskPageState extends State<taskPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFEDF3FC),
+      backgroundColor: const Color(0xFFEDF3FC),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'DayFlow',
           style: TextStyle(
             color: Color(0xFF234EF3),
@@ -56,7 +54,7 @@ class _taskPageState extends State<taskPage> {
             onPressed: () {
               // Handle icon button tap
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.menu,
               color: Color(0xFF234EF3),
             ),
@@ -67,7 +65,7 @@ class _taskPageState extends State<taskPage> {
             padding: const EdgeInsets.only(right: 24.0),
             child: IconButton(
               onPressed: () => signUserOut(context), // Pass context here
-              icon: Icon(
+              icon: const Icon(
                 Icons.logout,
                 color: Color(0xFF234EF3),
               ),
@@ -77,14 +75,14 @@ class _taskPageState extends State<taskPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             children: [
-              Gap(12),
+              const Gap(12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -100,10 +98,10 @@ class _taskPageState extends State<taskPage> {
                       ),
                     ],
                   ),
-                  Gap(12),
+                  const Gap(12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0XFFD5E8FA),
+                      backgroundColor: const Color(0XFFD5E8FA),
                       foregroundColor: Colors.blue.shade700,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -117,7 +115,7 @@ class _taskPageState extends State<taskPage> {
                       context: context,
                       builder: (context) => addTaskModal(),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Add Task',
                     ),
                   ),
@@ -134,20 +132,20 @@ class _taskPageState extends State<taskPage> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: Color(0xFF234EF3),
+              color: const Color(0xFF234EF3),
             ),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: GNav(
                 tabBorderRadius: 5,
-                tabBackgroundColor: Color(0xFFA5B7FF),
-                backgroundColor: Color(0xFF234EF3),
-                color: Color(0xFFA5B7FF),
+                tabBackgroundColor: const Color(0xFFA5B7FF),
+                backgroundColor: const Color(0xFF234EF3),
+                color: const Color(0xFFA5B7FF),
                 activeColor: Colors.white,
                 gap: 8,
                 iconSize: 20,
                 textSize: 10,
-                padding: EdgeInsets.all(6),
+                padding: const EdgeInsets.all(6),
                 selectedIndex: _selectedIndex,
                 onTabChange: (index) {
                   setState(() {
@@ -173,15 +171,15 @@ class _taskPageState extends State<taskPage> {
                   }
                 },
                 tabs: [
-                  GButton(
+                  const GButton(
                     icon: Icons.book_rounded,
                     text: 'Entries',
                   ),
-                  GButton(
+                  const GButton(
                     icon: Icons.dashboard_rounded,
                     text: 'Dashboard',
                   ),
-                  GButton(
+                  const GButton(
                     icon: Icons.task_alt_rounded,
                     text: 'Tasks',
                   ),

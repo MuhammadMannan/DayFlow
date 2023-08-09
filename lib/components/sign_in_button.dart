@@ -18,14 +18,6 @@ class MySignInButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: Color(0xFF234EF3),
             borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              // BoxShadow(
-              //   color: Color(0xFF84B1F3), // Shadow color
-              //   blurRadius: 27, // Blur radius
-              //   spreadRadius: 0, // Spread radius
-              //   offset: Offset(0, 0), // Offset in X and Y directions
-              // ),
-            ],
           ),
           child: Center(
             child: Padding(
