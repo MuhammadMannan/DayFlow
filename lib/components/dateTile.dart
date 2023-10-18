@@ -32,21 +32,21 @@ class dateTile extends StatelessWidget {
                     formattedDate,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 24,
+                        fontSize: 20,
                         color: Color(0xFF234EF3)),
                   ),
                   Text(
                     formattedMonth,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 24,
+                        fontSize: 20,
                         color: Color(0xFF234EF3)),
                   ),
                   Text(
                     formattedYear,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 24,
+                        fontSize: 20,
                         color: Color(0xFF234EF3)),
                   ),
                 ],
