@@ -11,6 +11,9 @@ class _TaskTileState extends State<TaskTile> {
   final user = FirebaseAuth.instance.currentUser!;
   late String userEmail;
 
+  double desiredWidth = 160; // Width of the widget in units
+  double desiredHeight = 160; // Height of the widget in units
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +30,8 @@ class _TaskTileState extends State<TaskTile> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = 1170; // Screen width in points (pixels)
+    double screenHeight = 2532; // Screen height in points (pixels)
     DateTime today = DateTime.now();
     DateTime todayStart = DateTime(today.year, today.month, today.day);
     DateTime todayEnd = todayStart.add(const Duration(days: 1));
@@ -52,8 +57,8 @@ class _TaskTileState extends State<TaskTile> {
               color: const Color(0xFF234EF3),
               borderRadius: BorderRadius.circular(16),
             ),
-            width: 160,
-            height: 160,
+            width: desiredWidth * (screenWidth / 1170),
+            height: desiredHeight * (screenHeight / 2532),
             child: const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
               child: Column(
@@ -95,8 +100,9 @@ class _TaskTileState extends State<TaskTile> {
             color: const Color(0xFF234EF3),
             borderRadius: BorderRadius.circular(16),
           ),
-          width: 160,
-          height: 160,
+          width: MediaQuery.of(context).size.width * .40,
+          //160,
+          height: MediaQuery.of(context).size.height * .20,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Column(

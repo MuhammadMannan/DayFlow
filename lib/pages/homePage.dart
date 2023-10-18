@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-
 import '../components/addTaskModal.dart';
 import '../components/dateTile.dart';
 import '../components/taskTile.dart';
@@ -74,7 +73,7 @@ class _homePageState extends State<homePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEDF3FC),
+      backgroundColor: const Color.fromARGB(255, 248, 249, 255),
       appBar: AppBar(
         title: const Text(
           'DayFlow',
@@ -120,7 +119,7 @@ class _homePageState extends State<homePage> {
                 children: [
                   TaskTile(),
                   //date container
-                  const dateTile(),
+                  dateTile(),
                 ],
               ),
               FractionallySizedBox(
@@ -180,26 +179,13 @@ class _homePageState extends State<homePage> {
                         } else if (snapshot.hasData) {
                           final tasks = snapshot.data!.docs;
                           if (tasks.isEmpty) {
-                            return Center(
-                                child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Congrats you don't have any tasks for today!",
-                                  style: TextStyle(
-                                      color: Colors.grey.shade400,
-                                      fontSize: 48,
-                                      fontWeight: FontWeight.w500),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const Gap(35),
-                                const Icon(
-                                  Icons.task_alt_rounded,
-                                  size: 100,
-                                  color: Colors.green,
-                                )
-                              ],
-                            ));
+                            return const Center(
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [],
+                              ),
+                            );
                           } else {
                             return ListView.separated(
                               shrinkWrap: true,
@@ -232,7 +218,8 @@ class _homePageState extends State<homePage> {
                                 }
                                 return Container(
                                   width: double.infinity,
-                                  height: 112,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.15,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(16),
@@ -246,7 +233,9 @@ class _homePageState extends State<homePage> {
                                               topLeft: Radius.circular(16),
                                               bottomLeft: Radius.circular(16)),
                                         ),
-                                        width: 20,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.045,
                                       ),
                                       Expanded(
                                         child: Padding(
@@ -281,26 +270,27 @@ class _homePageState extends State<homePage> {
                                               Transform.translate(
                                                 offset: const Offset(0, -12),
                                                 child: Container(
-                                                    child: Column(
-                                                  children: [
-                                                    Divider(
-                                                      thickness: 1.5,
-                                                      color:
-                                                          Colors.grey.shade100,
-                                                    ),
-                                                    Row(
-                                                      children: [
-                                                        if (categoryIcon !=
-                                                            null)
-                                                          categoryIcon,
-                                                        const SizedBox(
-                                                            width:
-                                                                8), // Add spacing
-                                                        Text(category),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                )),
+                                                  child: Column(
+                                                    children: [
+                                                      Divider(
+                                                        thickness: 1.5,
+                                                        color: Colors
+                                                            .grey.shade100,
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          if (categoryIcon !=
+                                                              null)
+                                                            categoryIcon,
+                                                          const SizedBox(
+                                                              width:
+                                                                  8), // Add spacing
+                                                          Text(category),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
                                               )
                                             ],
                                           ),

@@ -1,14 +1,13 @@
 // library_private_types_in_public_api
-
-import 'dart:ui';
+// ignore_for_file: file_names
 import 'package:dayflow/pages/homePage.dart';
 import 'package:dayflow/pages/signin.dart';
 import 'package:dayflow/pages/taskPage.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+
+import '../components/TaskGraph.dart';
 
 class TrendsPage extends StatefulWidget {
   const TrendsPage({super.key});
@@ -53,11 +52,6 @@ class _TrendsPageState extends State<TrendsPage> {
     });
   }
 
-  final List<Color> gradientColors = [
-    const Color(0xff23b6e6),
-    const Color(0xff02d39a),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,97 +90,12 @@ class _TrendsPageState extends State<TrendsPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: FractionallySizedBox(
-            widthFactor: 0.9, // Adjust the width factor as needed
-            heightFactor: 0.3, // Adjust the height factor as needed
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(userEmail)
-                  .collection('tasks')
-                  .where('createdAt',
-                      isGreaterThanOrEqualTo:
-                          DateTime.now().subtract(const Duration(days: 7)))
-                  .where('isComplete', isEqualTo: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final taskDocs = snapshot.data!.docs;
-                final dailyCompletedTasks = List<int>.filled(7, 0);
-
-                for (var doc in taskDocs) {
-                  DateTime createdAt = doc['createdAt'].toDate();
-                  int dayIndex = DateTime.now().difference(createdAt).inDays;
-                  if (dayIndex < 7) {
-                    dailyCompletedTasks[6 - dayIndex]++;
-                  }
-                }
-
-                return Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF234EF3),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 24, horizontal: 12),
-                    child: LineChart(
-                      LineChartData(
-                        gridData: FlGridData(
-                          show: true,
-                          getDrawingHorizontalLine: (value) {
-                            return const FlLine(
-                                color: Colors.white30,
-                                strokeWidth: 0.5); // Add the semicolon here
-                          },
-                          getDrawingVerticalLine: (value) {
-                            return const FlLine(
-                                color: Colors.white30,
-                                strokeWidth: 0.5); // Add the semicolon here
-                          },
-                        ),
-                        titlesData: const FlTitlesData(show: false),
-                        borderData: FlBorderData(show: false),
-                        minX: -0.5,
-                        maxX: 6.5,
-                        minY: 0,
-                        maxY: (dailyCompletedTasks)
-                                .reduce(
-                                    (max, value) => max > value ? max : value)
-                                .toDouble() +
-                            2,
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: List.generate(
-                              7,
-                              (index) => FlSpot(
-                                index.toDouble(),
-                                dailyCompletedTasks[index].toDouble(),
-                              ),
-                            ),
-                            isCurved: true,
-                            barWidth: 3,
-                            color: Colors.white,
-                            isStrokeCapRound: false,
-                            belowBarData: BarAreaData(
-                                show: true,
-                                color: Colors.blue.withOpacity(0.5)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: Column(
+        children: [
+          Center(
+            child: TaskGraph(userEmail: userEmail),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 15),

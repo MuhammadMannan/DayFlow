@@ -10,12 +10,18 @@ class dateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DateTime currentDate = DateTime.now();
-    String formattedDate = DateFormat('EEEE').format(currentDate);
-    String formattedMonth = DateFormat('MMMM d').format(currentDate);
+    String formattedDate = DateFormat('d EEEE').format(currentDate);
+    String formattedMonth = DateFormat('MMMM').format(currentDate);
     String formattedYear = DateFormat('y').format(currentDate);
     return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      width: 160,
+      height: 160,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: 24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -24,21 +30,21 @@ class dateTile extends StatelessWidget {
                 children: [
                   Text(
                     formattedDate,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 24,
                         color: Color(0xFF234EF3)),
                   ),
                   Text(
                     formattedMonth,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 24,
                         color: Color(0xFF234EF3)),
                   ),
                   Text(
                     formattedYear,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 24,
                         color: Color(0xFF234EF3)),
@@ -46,7 +52,7 @@ class dateTile extends StatelessWidget {
                 ],
               ),
             ),
-            Gap(10),
+            const Gap(10),
             Text(
               'No Entries Completed',
               style: TextStyle(
@@ -57,12 +63,6 @@ class dateTile extends StatelessWidget {
           ],
         ),
       ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      width: 160,
-      height: 160,
     );
   }
 }
