@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class signin extends StatefulWidget {
   final Function() onTap;
@@ -70,7 +71,6 @@ class _signinState extends State<signin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFEDF3FC),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -83,7 +83,6 @@ class _signinState extends State<signin> {
                     fontStyle: FontStyle.normal,
                     fontSize: 70,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF234EF3),
                   ),
                 ),
                 SizedBox(
@@ -95,9 +94,9 @@ class _signinState extends State<signin> {
                   child: Text(
                     'Welcome back, we missed you! 👋',
                     style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF234EF3)),
+                      fontSize: 30,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
                 //tagline
@@ -107,16 +106,16 @@ class _signinState extends State<signin> {
                 //username
                 MyTextField(
                   controller: emailController,
-                  hintText: 'E-Mail',
-                  obscureText: false,
+                  placeholder: 'E-Mail',
+                  obscuretext: false,
                 ),
                 SizedBox(height: 25),
 
                 //password
                 MyTextField(
                   controller: passwordController,
-                  hintText: 'Password',
-                  obscureText: true,
+                  placeholder: 'Password',
+                  obscuretext: true,
                 ),
 
                 SizedBox(height: 25),
@@ -125,9 +124,10 @@ class _signinState extends State<signin> {
 
                 //sign in button
                 SizedBox(height: 25),
-                MySignInButton(
-                  onTap: signUserIn, // Call the signUserIn function directly
-                  text: 'Sign in',
+                ShadButton(
+                  onPressed:
+                      signUserIn, // Call the signUserIn function directly
+                  text: const Text('Sign in'),
                 ),
 
                 //sign in
@@ -152,7 +152,6 @@ class _signinState extends State<signin> {
                         'Register Now',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF234EF3),
                         ),
                       ),
                     ),
