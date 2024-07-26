@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:dayflow/components/my_text_field.dart';
 import 'package:dayflow/components/sign_in_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class registerPage extends StatefulWidget {
   final Function() onTap;
@@ -160,7 +161,6 @@ class _registerPageState extends State<registerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFEDF3FC),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -173,7 +173,6 @@ class _registerPageState extends State<registerPage> {
                     fontStyle: FontStyle.normal,
                     fontWeight: FontWeight.bold,
                     fontSize: 70,
-                    color: Color(0xFF234EF3),
                   ),
                 ),
                 //logo/title
@@ -183,9 +182,9 @@ class _registerPageState extends State<registerPage> {
                   child: Text(
                     'Hi nice to meet you! 👋',
                     style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF234EF3)),
+                      fontSize: 30,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
                 //tagline
@@ -193,31 +192,31 @@ class _registerPageState extends State<registerPage> {
                 //username
                 MyTextField(
                   controller: emailController,
-                  hintText: 'E-Mail',
-                  obscureText: false,
+                  placeholder: 'E-Mail',
+                  obscuretext: false,
                 ),
                 SizedBox(height: 25),
 
                 //password
                 MyTextField(
                   controller: passwordController,
-                  hintText: 'Password',
-                  obscureText: true,
+                  placeholder: 'Password',
+                  obscuretext: true,
                 ),
                 SizedBox(height: 25),
 
                 //confirm password
                 MyTextField(
                   controller: confirmPasswordController,
-                  hintText: 'Confirm password',
-                  obscureText: true,
+                  placeholder: 'Confirm password',
+                  obscuretext: true,
                 ),
 
                 //sign in button
                 SizedBox(height: 25),
-                MySignInButton(
-                  onTap: signUserUp,
-                  text: 'Sign up',
+                ShadButton(
+                  onPressed: signUserUp,
+                  text: const Text('Sign up'),
                 ),
 
                 //sign in
@@ -242,7 +241,6 @@ class _registerPageState extends State<registerPage> {
                         'Login Now',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF234EF3),
                         ),
                       ),
                     ),

@@ -1,40 +1,28 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class MyTextField extends StatelessWidget {
-  const MyTextField(
-      {super.key,
-      this.controller,
-      required this.hintText,
-      required this.obscureText});
+  const MyTextField({
+    super.key,
+    this.controller,
+    required this.placeholder,
+    required this.obscuretext,
+  });
 
   final controller;
-  final String hintText;
-  final bool obscureText;
+  final String placeholder;
+  final bool obscuretext;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: TextField(
-          obscureText: obscureText,
-          controller: controller,
-          decoration: InputDecoration(
-            fillColor: Colors.white,
-            filled: true,
-            hintText: hintText,
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.transparent),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.blue.shade100),
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: ShadInput(
+        controller: controller,
+        placeholder: Text(placeholder),
+        obscureText: obscuretext,
       ),
     );
   }
