@@ -20,13 +20,21 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ShadApp.material(
+    return ShadApp.custom(
       darkTheme: ShadThemeData(
         brightness: Brightness.dark,
         colorScheme: const ShadSlateColorScheme.dark(),
       ),
-      debugShowCheckedModeBanner: false,
-      home: AuthPage(),
+      appBuilder: (context) {
+        return MaterialApp(
+          theme: Theme.of(context),
+          debugShowCheckedModeBanner: false,
+          home: AuthPage(),
+          builder: (context, child) {
+            return ShadAppBuilder(child: child!);
+          },
+        );
+      },
     );
   }
 }

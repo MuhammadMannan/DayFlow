@@ -216,7 +216,7 @@ class _registerPageState extends State<registerPage> {
                 SizedBox(height: 25),
                 ShadButton(
                   onPressed: signUserUp,
-                  text: const Text('Sign up'),
+                  child: const Text('Sign up'),
                 ),
 
                 //sign in

@@ -127,7 +127,7 @@ class _signinState extends State<signin> {
                 ShadButton(
                   onPressed:
                       signUserIn, // Call the signUserIn function directly
-                  text: const Text('Sign in'),
+                  child: const Text('Sign in'),
                 ),
 
                 //sign in

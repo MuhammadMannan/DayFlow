@@ -174,7 +174,7 @@ class TaskGraph extends StatelessWidget {
     return Transform.rotate(
       angle: 0,
       child: SideTitleWidget(
-        axisSide: meta.axisSide,
+        meta: meta,
         child: Column(
           children: [
             Gap(5),
