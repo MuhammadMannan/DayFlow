@@ -165,6 +165,7 @@ class Settings {
     this.showCalendar = true,
     this.nudgeHour = 20,
     this.onboarded = false,
+    this.hiddenCalendars = const [],
   });
 
   /// 0 means no goal; otherwise tasks per day.
@@ -180,6 +181,10 @@ class Settings {
   /// False until the user has finished or skipped onboarding.
   final bool onboarded;
 
+  /// Ids of device calendars the user has switched off. Stored as the
+  /// hidden ones so calendars added later show up by default.
+  final List<String> hiddenCalendars;
+
   Map<String, dynamic> toMap() => {
         'dailyGoal': dailyGoal,
         'theme': theme,
@@ -188,6 +193,7 @@ class Settings {
         'showCalendar': showCalendar,
         'nudgeHour': nudgeHour,
         'onboarded': onboarded,
+        'hiddenCalendars': hiddenCalendars,
       };
 
   factory Settings.fromMap(Map<String, dynamic>? d) => Settings(
@@ -198,6 +204,10 @@ class Settings {
         showCalendar: (d?['showCalendar'] as bool?) ?? true,
         nudgeHour: (d?['nudgeHour'] as int?) ?? 20,
         onboarded: (d?['onboarded'] as bool?) ?? false,
+        hiddenCalendars: [
+          for (final id in (d?['hiddenCalendars'] as List?) ?? const [])
+            if (id is String) id,
+        ],
       );
 }
 
@@ -209,6 +219,7 @@ class CalEvent {
     required this.end,
     this.location = '',
     this.allDay = false,
+    this.calendarId = '',
   });
 
   final String title;
@@ -216,10 +227,30 @@ class CalEvent {
   final DateTime end;
   final String location;
   final bool allDay;
+  final String calendarId;
 
   bool isOn(DateTime day) {
     final d = dateOnly(day);
     final next = d.add(const Duration(days: 1));
     return start.isBefore(next) && end.isAfter(d);
   }
+}
+
+/// One of the phone's calendars (iCloud, Google, Outlook and so on).
+class DeviceCal {
+  const DeviceCal({
+    required this.id,
+    required this.title,
+    required this.source,
+    required this.color,
+  });
+
+  final String id;
+  final String title;
+
+  /// The account it belongs to, e.g. "iCloud".
+  final String source;
+
+  /// ARGB colour the calendar uses in the system Calendar app.
+  final int color;
 }

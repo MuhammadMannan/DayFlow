@@ -31,6 +31,8 @@ import UserNotifications
         result(self.calendarStatus())
       case "request":
         self.requestCalendarAccess(result: result)
+      case "calendars":
+        result(self.calendars())
       case "events":
         guard let args = call.arguments as? [String: Any],
           let startMs = args["start"] as? NSNumber,
@@ -67,6 +69,25 @@ import UserNotifications
     }
   }
 
+  private func calendars() -> [[String: Any]] {
+    guard calendarStatus() == "granted" else { return [] }
+    return eventStore.calendars(for: .event).map { calendar in
+      var color = 0xFF0EA5A0
+      if let c = calendar.cgColor?.converted(
+        to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil
+      )?.components, c.count >= 3 {
+        color =
+          0xFF00_0000 | (Int(c[0] * 255) << 16) | (Int(c[1] * 255) << 8) | Int(c[2] * 255)
+      }
+      return [
+        "id": calendar.calendarIdentifier,
+        "title": calendar.title,
+        "source": calendar.source?.title ?? "",
+        "color": color,
+      ]
+    }
+  }
+
   private func events(startMs: Double, endMs: Double) -> [[String: Any]] {
     guard calendarStatus() == "granted" else { return [] }
     let start = Date(timeIntervalSince1970: startMs / 1000)
@@ -79,6 +100,7 @@ import UserNotifications
         "end": event.endDate.timeIntervalSince1970 * 1000,
         "location": event.location ?? "",
         "allDay": event.isAllDay,
+        "calendarId": event.calendar?.calendarIdentifier ?? "",
       ]
     }
   }

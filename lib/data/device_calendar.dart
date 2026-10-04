@@ -37,6 +37,31 @@ class DeviceCalendar {
     }
   }
 
+  static Future<List<DeviceCal>> calendars() async {
+    try {
+      final raw = await _channel.invokeListMethod<Map>('calendars');
+      return (raw ?? const [])
+          .map((m) => DeviceCal(
+                id: (m['id'] as String?) ?? '',
+                title: (m['title'] as String?) ?? '',
+                source: (m['source'] as String?) ?? '',
+                color: (m['color'] as num?)?.toInt() ?? 0xFF0EA5A0,
+              ))
+          .toList()
+        ..sort((a, b) {
+          final s = a.source.toLowerCase().compareTo(b.source.toLowerCase());
+          return s != 0
+              ? s
+              : a.title.toLowerCase().compareTo(b.title.toLowerCase());
+        });
+    } on MissingPluginException {
+      return const [];
+    } on PlatformException catch (e) {
+      debugPrint('Calendar list failed: $e');
+      return const [];
+    }
+  }
+
   static Future<List<CalEvent>> events(DateTime start, DateTime end) async {
     try {
       final raw = await _channel.invokeListMethod<Map>('events', {
@@ -52,6 +77,7 @@ class DeviceCalendar {
                     (m['end'] as num).toInt()),
                 location: (m['location'] as String?) ?? '',
                 allDay: (m['allDay'] as bool?) ?? false,
+                calendarId: (m['calendarId'] as String?) ?? '',
               ))
           .toList()
         ..sort((a, b) => a.start.compareTo(b.start));

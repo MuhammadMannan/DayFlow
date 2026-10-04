@@ -8,6 +8,7 @@ import '../data/notifications.dart';
 import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import 'calendars.dart';
 
 void openProfile(BuildContext context) {
   final state = AppScope.read(context);
@@ -95,7 +96,11 @@ class ProfileScreen extends StatelessWidget {
     final streak = state.streak;
 
     final calendarValue = switch (state.calendarAccess) {
-      CalendarAccess.granted => s.showCalendar ? 'Connected' : 'Hidden',
+      CalendarAccess.granted => !s.showCalendar
+          ? 'Hidden'
+          : state.calendars.isEmpty
+              ? 'Connected'
+              : '${state.shownCalendarCount} of ${state.calendars.length} shown',
       CalendarAccess.denied => 'Access off',
       CalendarAccess.notDetermined => 'Not connected',
     };
@@ -264,8 +269,15 @@ class ProfileScreen extends StatelessWidget {
                           showMessage(context,
                               'Turn on calendar access in Settings › DayFlow › Calendars.');
                         case CalendarAccess.granted:
-                          await _save(context, state,
-                              {'showCalendar': !s.showCalendar});
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => AppScope(
+                                  state: state,
+                                  child: const CalendarsScreen()),
+                            ),
+                          );
                       }
                     },
                   ),

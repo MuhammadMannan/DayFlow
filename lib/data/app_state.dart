@@ -41,7 +41,8 @@ class AppState extends ChangeNotifier {
   String? error;
 
   CalendarAccess calendarAccess = CalendarAccess.notDetermined;
-  List<CalEvent> events = [];
+  List<DeviceCal> calendars = [];
+  List<CalEvent> _allEvents = [];
 
   late final StreamSubscription _taskSub, _tagSub, _settingsSub;
   bool _seeded = false;
@@ -328,12 +329,14 @@ class AppState extends ChangeNotifier {
     calendarAccess = await DeviceCalendar.status();
     if (calendarAccess == CalendarAccess.granted) {
       final now = DateTime.now();
-      events = await DeviceCalendar.events(
+      calendars = await DeviceCalendar.calendars();
+      _allEvents = await DeviceCalendar.events(
         DateTime(now.year, now.month - 2, 1),
         DateTime(now.year, now.month + 3, 1),
       );
     } else {
-      events = [];
+      calendars = [];
+      _allEvents = [];
     }
     notifyListeners();
   }
@@ -342,6 +345,18 @@ class AppState extends ChangeNotifier {
     calendarAccess = await DeviceCalendar.request();
     await refreshCalendar();
   }
+
+  /// Events from the calendars the user has left switched on.
+  List<CalEvent> get events {
+    final hidden = settings.hiddenCalendars;
+    if (hidden.isEmpty) return _allEvents;
+    return _allEvents.where((e) => !hidden.contains(e.calendarId)).toList();
+  }
+
+  /// How many of the phone's calendars are switched on.
+  int get shownCalendarCount => calendars
+      .where((cal) => !settings.hiddenCalendars.contains(cal.id))
+      .length;
 
   bool get showEvents =>
       settings.showCalendar && calendarAccess == CalendarAccess.granted;
