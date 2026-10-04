@@ -2,6 +2,7 @@ import 'package:dayflow/data/notifications.dart';
 import 'package:dayflow/data/quick_parse.dart';
 import 'package:dayflow/data/streak.dart';
 import 'package:dayflow/models/models.dart';
+import 'package:dayflow/screens/day_timeline.dart';
 import 'package:dayflow/screens/milestone.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -182,6 +183,32 @@ void main() {
       expect(milestoneReached(7, 8), isNull);
       expect(milestoneReached(7, 7), isNull);
       expect(milestoneReached(0, 1), isNull);
+    });
+  });
+
+  group('layoutTimeline', () {
+    TimelineItem item(int start, int end) =>
+        TimelineItem(start: start, end: end);
+
+    test('separate items keep the full width', () {
+      final items = [item(540, 600), item(600, 660)];
+      layoutTimeline(items);
+      expect(items.every((i) => i.columns == 1 && i.column == 0), isTrue);
+    });
+
+    test('overlapping items sit side by side', () {
+      final items = [item(540, 600), item(570, 630)];
+      layoutTimeline(items);
+      expect(items.map((i) => i.column).toSet(), {0, 1});
+      expect(items.every((i) => i.columns == 2), isTrue);
+    });
+
+    test('a later item reuses a freed column', () {
+      // a and b overlap; c overlaps b only, so it takes a's column.
+      final items = [item(540, 600), item(570, 660), item(610, 650)];
+      layoutTimeline(items);
+      expect(items[2].column, 0);
+      expect(items.every((i) => i.columns == 2), isTrue);
     });
   });
 }

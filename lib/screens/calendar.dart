@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'add_task.dart';
+import 'day_timeline.dart';
 import 'shell.dart';
 import 'task_detail.dart';
 
@@ -160,7 +161,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
           const SizedBox(height: DfSpace.s3),
-          ..._agenda(context, state, tasks, events),
+          if (_view == _View.week)
+            DayTimeline(day: _selected)
+          else
+            ..._agenda(context, state, tasks, events),
           if (state.calendarAccess != CalendarAccess.granted) ...[
             const SizedBox(height: DfSpace.s4),
             _CalendarAccessCard(state: state),

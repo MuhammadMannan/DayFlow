@@ -13,6 +13,7 @@ Future<void> showAddTask(
   BuildContext context, {
   Task? task,
   DateTime? day,
+  TimeOfDay? time,
   String? title,
 }) {
   final state = AppScope.read(context);
@@ -23,16 +24,17 @@ Future<void> showAddTask(
     barrierColor: context.df.overlay.withValues(alpha: 0.45),
     builder: (_) => AppScope(
       state: state,
-      child: AddTaskSheet(task: task, day: day, title: title),
+      child: AddTaskSheet(task: task, day: day, time: time, title: title),
     ),
   );
 }
 
 class AddTaskSheet extends StatefulWidget {
-  const AddTaskSheet({super.key, this.task, this.day, this.title});
+  const AddTaskSheet({super.key, this.task, this.day, this.time, this.title});
 
   final Task? task;
   final DateTime? day;
+  final TimeOfDay? time;
   final String? title;
 
   @override
@@ -78,6 +80,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     } else {
       _date = dateOnly(widget.day ?? DateTime.now());
       _dateTouched = widget.day != null;
+      if (widget.time != null) {
+        _time = widget.time;
+        _timeTouched = true;
+      }
     }
   }
 
