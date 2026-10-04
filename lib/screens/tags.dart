@@ -240,7 +240,7 @@ class _TagEditorState extends State<_TagEditor> {
                             color: _icon == entry.key
                                 ? c.tagSoft(_color)
                                 : c.surfaceMuted,
-                            borderRadius: BorderRadius.circular(DfRadius.sm),
+                            borderRadius: BorderRadius.circular(DfRadius.badge),
                             border: Border.all(
                               color: _icon == entry.key
                                   ? c.tag(_color)
@@ -270,7 +270,7 @@ class _TagEditorState extends State<_TagEditor> {
                 const SizedBox(height: DfSpace.s1),
                 DfButton(
                   label: 'Delete tag',
-                  icon: LucideIcons.trash2,
+                  icon: LucideIcons.trash,
                   kind: DfButtonKind.dangerText,
                   onPressed: _delete,
                 ),
@@ -328,7 +328,7 @@ class TagsScreen extends StatelessWidget {
             const SizedBox(height: DfSpace.s4),
             if (state.tags.isNotEmpty)
               DfCard(
-                radius: DfRadius.xl,
+                radius: DfRadius.card,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Column(
                   children: [
@@ -354,7 +354,7 @@ class TagsScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: c.tagSoft(tag.color),
                                     borderRadius:
-                                        BorderRadius.circular(DfRadius.sm),
+                                        BorderRadius.circular(DfRadius.badge),
                                   ),
                                   child: Icon(tagIcon(tag),
                                       size: 18, color: c.tag(tag.color)),

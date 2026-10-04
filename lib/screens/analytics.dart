@@ -159,7 +159,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: c.primarySoft,
-              borderRadius: BorderRadius.circular(DfRadius.md),
+              borderRadius: BorderRadius.circular(DfRadius.field),
             ),
             child: Row(
               children: [
@@ -246,7 +246,7 @@ class _StreakCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -363,7 +363,7 @@ class _Heatmap extends StatelessWidget {
     const dayLabels = ['M', '', 'W', '', 'F', '', 'S'];
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -507,7 +507,7 @@ class _ByTag extends StatelessWidget {
     }
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -612,7 +612,7 @@ class _WeeklyBars extends StatelessWidget {
     final best = totals.indexOf(peak);
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

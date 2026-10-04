@@ -130,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: DfSpace.s4),
             DfCard(
-              radius: DfRadius.xl,
+              radius: DfRadius.card,
               padding: const EdgeInsets.all(DfSpace.s5),
               child: Column(
                 children: [
@@ -434,7 +434,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     Divider(color: c.border),
                     _SettingRow(
-                      icon: LucideIcons.trash2,
+                      icon: LucideIcons.trash,
                       tint: c.danger,
                       bg: c.dangerSoft,
                       label: 'Clear all tasks',
@@ -515,7 +515,7 @@ class _SettingRow extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                  color: bg, borderRadius: BorderRadius.circular(DfRadius.sm)),
+                  color: bg, borderRadius: BorderRadius.circular(DfRadius.badge)),
               child: Icon(icon, size: 18, color: tint),
             ),
             const SizedBox(width: 12),

@@ -242,7 +242,7 @@ class TaskDetailScreen extends StatelessWidget {
                   const SizedBox(height: DfSpace.s2),
                   DfButton(
                     label: 'Delete task',
-                    icon: LucideIcons.trash2,
+                    icon: LucideIcons.trash,
                     kind: DfButtonKind.dangerText,
                     onPressed: delete,
                   ),

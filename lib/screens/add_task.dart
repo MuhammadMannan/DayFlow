@@ -366,7 +366,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: c.primarySoft,
-            borderRadius: BorderRadius.circular(DfRadius.sm),
+            borderRadius: BorderRadius.circular(DfRadius.badge),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -510,7 +510,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: c.surfaceMuted,
-          borderRadius: BorderRadius.circular(DfRadius.lg),
+          borderRadius: BorderRadius.circular(DfRadius.card),
         ),
         child: Column(
           children: [
@@ -583,7 +583,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       const SizedBox(height: DfSpace.s4),
       Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(DfRadius.lg),
+          borderRadius: BorderRadius.circular(DfRadius.card),
           border: Border.all(color: c.border),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -794,7 +794,7 @@ class _FormRow extends StatelessWidget {
                 height: 34,
                 decoration: BoxDecoration(
                   color: c.surfaceMuted,
-                  borderRadius: BorderRadius.circular(DfRadius.sm),
+                  borderRadius: BorderRadius.circular(DfRadius.badge),
                 ),
                 child: Icon(icon, size: 18, color: c.textSecondary),
               ),

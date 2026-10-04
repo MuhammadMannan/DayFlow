@@ -271,18 +271,16 @@ class _Legend extends StatelessWidget {
 }
 
 class _Dots extends StatelessWidget {
-  const _Dots({required this.tasks, required this.events, this.onPrimary = false});
+  const _Dots({required this.tasks, required this.events});
   final int tasks;
   final int events;
-  final bool onPrimary;
 
   @override
   Widget build(BuildContext context) {
     final c = context.df;
     final dots = <Color>[
-      if (events > 0) onPrimary ? Colors.white : c.event,
-      for (var i = 0; i < tasks.clamp(0, 2); i++)
-        onPrimary ? Colors.white : c.primary,
+      if (events > 0) c.event,
+      for (var i = 0; i < tasks.clamp(0, 2); i++) c.primary,
     ];
     return SizedBox(
       height: 5,
@@ -291,9 +289,9 @@ class _Dots extends StatelessWidget {
         children: [
           for (final color in dots)
             Container(
-              width: 4,
-              height: 4,
-              margin: const EdgeInsets.symmetric(horizontal: 1),
+              width: 5,
+              height: 5,
+              margin: const EdgeInsets.symmetric(horizontal: 1.5),
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
         ],
@@ -326,7 +324,7 @@ class _MonthGrid extends StatelessWidget {
     const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       padding: const EdgeInsets.fromLTRB(8, 14, 8, 10),
       child: Column(
         children: [
@@ -427,41 +425,21 @@ class _WeekStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.df;
+    final today = dateOnly(DateTime.now());
     return Row(
       children: [
         for (var i = 0; i < 7; i++)
           Expanded(
             child: Builder(builder: (context) {
               final day = start.add(Duration(days: i));
-              final isSelected = day == selected;
-              final open =
-                  state.tasksOn(day).where((t) => !t.isDone).length;
-              final events = state.eventsOn(day).length;
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
+              return DayPill(
+                day: day,
+                selected: day == selected,
+                isToday: day == today,
+                hasItems:
+                    state.tasksOn(day).any((t) => !t.isDone) ||
+                        state.eventsOn(day).isNotEmpty,
                 onTap: () => onSelect(day),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected ? c.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(DfRadius.md),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(DateFormat('EEE').format(day),
-                          style: DfText.caption.copyWith(
-                              color: isSelected ? Colors.white : c.textMuted)),
-                      const SizedBox(height: 2),
-                      Text('${day.day}',
-                          style: DfText.h3.copyWith(
-                              color: isSelected ? Colors.white : c.text)),
-                      const SizedBox(height: 4),
-                      _Dots(tasks: open, events: events, onPrimary: isSelected),
-                    ],
-                  ),
-                ),
               );
             }),
           ),

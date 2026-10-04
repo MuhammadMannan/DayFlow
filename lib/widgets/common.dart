@@ -17,7 +17,7 @@ class DfCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(DfSpace.s4),
     this.color,
     this.borderColor,
-    this.radius = DfRadius.lg,
+    this.radius = DfRadius.card,
     this.onTap,
   });
 
@@ -168,25 +168,32 @@ class TagChip extends StatelessWidget {
     final c = context.df;
     final color = c.tag(tag.color);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      height: 24,
+      padding: const EdgeInsets.only(left: 8, right: 10),
       decoration: BoxDecoration(
         color: c.tagSoft(tag.color),
         borderRadius: BorderRadius.circular(DfRadius.full),
         border: Border.all(
           color: selected ? color : Colors.transparent,
           width: 1.5,
+          // Drawn outside so a selected chip keeps its 24pt height.
+          strokeAlign: BorderSide.strokeAlignOutside,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 7,
+            height: 7,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(tag.name, style: DfText.smallStrong.copyWith(color: color)),
+          Text(
+            tag.name,
+            style: DfText.caption
+                .copyWith(color: color, fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
@@ -203,7 +210,8 @@ class StreakChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      height: 30,
+      padding: const EdgeInsets.only(left: 10, right: 12),
       decoration: BoxDecoration(
         color: c.flameSoft,
         borderRadius: BorderRadius.circular(DfRadius.full),
@@ -211,7 +219,7 @@ class StreakChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.flame, size: 16, color: c.flame),
+          Icon(LucideIcons.flame, size: 18, color: c.flame),
           const SizedBox(width: 6),
           Text(label ?? '$days',
               style: DfText.smallStrong.copyWith(color: c.flame)),
@@ -442,12 +450,15 @@ class TaskRow extends StatelessWidget {
     final repeat =
         task.repeat == Repeat.none ? '' : ' · repeats ${task.repeat.label.toLowerCase()}';
 
+    // Figma: 72 high, radius 18, padding 14/16, 14 between checkbox and text.
+    // The checkbox keeps a 44pt tap target, so its own 10pt inset is taken
+    // off the surrounding padding.
     return DfCard(
       onTap: onTap,
-      borderColor: overdue ? c.danger.withValues(alpha: 0.35) : null,
-      padding: const EdgeInsets.fromLTRB(6, 10, 14, 10),
+      radius: DfRadius.row,
+      borderColor: overdue ? c.dangerSoft : null,
+      padding: const EdgeInsets.fromLTRB(6, 4, 16, 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DfCheckbox(
             checked: task.isDone,
@@ -457,7 +468,7 @@ class TaskRow extends StatelessWidget {
           const SizedBox(width: 4),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -468,10 +479,10 @@ class TaskRow extends StatelessWidget {
                     ),
                     child: Text(task.title),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Wrap(
                     spacing: 8,
-                    runSpacing: 6,
+                    runSpacing: 4,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Row(
@@ -485,7 +496,7 @@ class TaskRow extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '$when$repeat',
-                            style: DfText.small.copyWith(
+                            style: DfText.caption.copyWith(
                               color: overdue ? c.danger : c.textMuted,
                             ),
                           ),
@@ -500,8 +511,8 @@ class TaskRow extends StatelessWidget {
           ),
           if (task.remind && task.hasTime)
             Padding(
-              padding: const EdgeInsets.only(top: 12, left: 8),
-              child: Icon(LucideIcons.bell, size: 18, color: c.textMuted),
+              padding: const EdgeInsets.only(left: 8),
+              child: Icon(LucideIcons.bell, size: 16, color: c.textMuted),
             ),
         ],
       ),
@@ -526,13 +537,13 @@ class EventRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
       decoration: BoxDecoration(
         color: c.eventSoft,
-        borderRadius: BorderRadius.circular(DfRadius.lg),
+        borderRadius: BorderRadius.circular(DfRadius.row),
       ),
       child: Row(
         children: [
           Container(
-            width: 3,
-            height: 36,
+            width: 4,
+            height: 40,
             decoration: BoxDecoration(
               color: c.event,
               borderRadius: BorderRadius.circular(2),
@@ -547,15 +558,15 @@ class EventRow extends StatelessWidget {
                     style: DfText.bodyStrong.copyWith(color: c.text),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(detail,
-                    style: DfText.small.copyWith(color: c.textSecondary),
+                    style: DfText.caption.copyWith(color: c.textSecondary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-          Icon(LucideIcons.calendar, size: 18, color: c.event),
+          Icon(LucideIcons.calendar, size: 16, color: c.event),
         ],
       ),
     );
@@ -599,7 +610,7 @@ class DfSegmented<T> extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
                   color: values[i] == selected ? c.surface : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: values[i] == selected ? DfShadow.card : null,
                 ),
                 child: Text(
@@ -650,14 +661,15 @@ class DfTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     OutlineInputBorder border(Color color, [double w = 1]) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DfRadius.lg),
+          borderRadius: BorderRadius.circular(DfRadius.field),
           borderSide: BorderSide(color: color, width: w),
         );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(label!, style: DfText.smallStrong.copyWith(color: c.text)),
+          Text(label!,
+              style: DfText.smallStrong.copyWith(color: c.textSecondary)),
           const SizedBox(height: DfSpace.s2),
         ],
         TextField(
@@ -681,7 +693,7 @@ class DfTextField extends StatelessWidget {
                 : Icon(icon, size: 20, color: c.textSecondary),
             suffixIcon: suffix,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             enabledBorder: border(error != null ? c.danger : c.border,
                 error != null ? 1.5 : 1),
             focusedBorder:
@@ -761,5 +773,91 @@ Future<void> toggleTask(BuildContext context, Task task, bool done) async {
     if (context.mounted) {
       showMessage(context, 'Could not save. Check your connection.');
     }
+  }
+}
+
+/// One day in a week strip. Figma: 46 by 66, radius 16.
+class DayPill extends StatelessWidget {
+  const DayPill({
+    super.key,
+    required this.day,
+    required this.selected,
+    required this.isToday,
+    required this.hasItems,
+    this.onTap,
+  });
+
+  final DateTime day;
+  final bool selected;
+  final bool isToday;
+  final bool hasItems;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.df;
+    // Today is outlined when another day is the selected one.
+    final outlined = isToday && !selected;
+    return Semantics(
+      button: onTap != null,
+      selected: selected,
+      label: DateFormat('EEEE d MMMM').format(day),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Center(
+          child: Container(
+            width: 46,
+            height: 66,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: selected
+                  ? c.primary
+                  : outlined
+                      ? c.surface
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              border: outlined
+                  ? Border.all(color: c.primary, width: 1.5)
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  DateFormat('EEE').format(day),
+                  style: DfText.caption.copyWith(
+                    fontSize: 11,
+                    height: 16 / 11,
+                    color: selected ? Colors.white : c.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${day.day}',
+                  style: DfText.h3.copyWith(
+                    height: 20 / 17,
+                    color: selected ? Colors.white : c.text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: !hasItems
+                        ? Colors.transparent
+                        : selected
+                            ? Colors.white
+                            : c.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

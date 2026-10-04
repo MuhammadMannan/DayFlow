@@ -183,7 +183,7 @@ class HomeScreen extends StatelessWidget {
     ];
     return [
       DfCard(
-        radius: DfRadius.xl,
+        radius: DfRadius.card,
         padding: const EdgeInsets.all(DfSpace.s5),
         child: Column(
           children: [
@@ -381,7 +381,6 @@ class _WeekStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.df;
     final today = dateOnly(DateTime.now());
     final monday = today.subtract(Duration(days: today.weekday - 1));
     return Row(
@@ -390,40 +389,13 @@ class _WeekStrip extends StatelessWidget {
           Expanded(
             child: Builder(builder: (context) {
               final day = monday.add(Duration(days: i));
-              final isToday = day == today;
-              final has = state.tasksOn(day).isNotEmpty ||
-                  state.eventsOn(day).isNotEmpty;
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isToday ? c.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(DfRadius.md),
-                ),
-                child: Column(
-                  children: [
-                    Text(DateFormat('EEE').format(day),
-                        style: DfText.caption.copyWith(
-                            color: isToday ? Colors.white : c.textMuted)),
-                    const SizedBox(height: 2),
-                    Text('${day.day}',
-                        style: DfText.h3.copyWith(
-                            color: isToday ? Colors.white : c.text)),
-                    const SizedBox(height: 4),
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: !has
-                            ? Colors.transparent
-                            : isToday
-                                ? Colors.white
-                                : c.primary,
-                      ),
-                    ),
-                  ],
-                ),
+              return DayPill(
+                day: day,
+                // Home always shows today as the selected day.
+                selected: day == today,
+                isToday: day == today,
+                hasItems: state.tasksOn(day).isNotEmpty ||
+                    state.eventsOn(day).isNotEmpty,
               );
             }),
           ),
@@ -684,7 +656,7 @@ class _ComingRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
                 color: isEvent ? c.eventSoft : c.surfaceMuted,
-                borderRadius: BorderRadius.circular(DfRadius.sm),
+                borderRadius: BorderRadius.circular(DfRadius.md),
               ),
               child: Column(
                 children: [

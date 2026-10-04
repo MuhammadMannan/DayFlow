@@ -132,7 +132,7 @@ class _TasksScreenState extends State<TasksScreen> {
           Container(
             decoration: BoxDecoration(
               color: c.surface,
-              borderRadius: BorderRadius.circular(DfRadius.lg),
+              borderRadius: BorderRadius.circular(DfRadius.row),
               border: Border.all(color: c.primary, width: 1.5),
             ),
             padding: const EdgeInsets.only(left: 14, right: 8),
@@ -160,7 +160,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   label: 'Add task',
                   child: Material(
                     color: c.primarySoft,
-                    borderRadius: BorderRadius.circular(DfRadius.sm),
+                    borderRadius: BorderRadius.circular(DfRadius.md),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: _quickAdd,
@@ -213,7 +213,7 @@ class _TasksScreenState extends State<TasksScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: c.primarySoft,
-                borderRadius: BorderRadius.circular(DfRadius.md),
+                borderRadius: BorderRadius.circular(DfRadius.field),
               ),
               child: Row(
                 children: [
@@ -360,7 +360,7 @@ class _Swipeable extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(DfRadius.lg),
+            borderRadius: BorderRadius.circular(DfRadius.row),
           ),
           child: Icon(icon, color: Colors.white),
         );
@@ -368,7 +368,7 @@ class _Swipeable extends StatelessWidget {
       key: ValueKey('swipe-${task.id}-${task.isDone}'),
       background: bg(c.success, LucideIcons.check, Alignment.centerLeft),
       secondaryBackground:
-          bg(c.danger, LucideIcons.trash2, Alignment.centerRight),
+          bg(c.danger, LucideIcons.trash, Alignment.centerRight),
       confirmDismiss: (direction) async {
         final state = AppScope.read(context);
         if (direction == DismissDirection.startToEnd) {

@@ -229,7 +229,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: c.surfaceMuted,
-            borderRadius: BorderRadius.circular(DfRadius.md),
+            borderRadius: BorderRadius.circular(DfRadius.field),
           ),
           child: Row(
             children: [
@@ -254,7 +254,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
           decoration: BoxDecoration(
             color: c.eventSoft,
-            borderRadius: BorderRadius.circular(DfRadius.lg),
+            borderRadius: BorderRadius.circular(DfRadius.row),
           ),
           child: Row(
             children: [
@@ -287,7 +287,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         // An example day, not the user's data.
         ExcludeSemantics(
           child: DfCard(
-            radius: DfRadius.xl,
+            radius: DfRadius.card,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -354,7 +354,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: c.surface,
-            borderRadius: BorderRadius.circular(DfRadius.lg),
+            borderRadius: BorderRadius.circular(DfRadius.row),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,7 +364,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 height: 34,
                 decoration: BoxDecoration(
                   color: c.primary,
-                  borderRadius: BorderRadius.circular(DfRadius.sm),
+                  borderRadius: BorderRadius.circular(DfRadius.badge),
                 ),
                 child: const Icon(LucideIcons.check,
                     color: Colors.white, size: 18),
