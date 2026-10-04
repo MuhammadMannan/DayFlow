@@ -176,6 +176,22 @@ class DfSpace {
 
 class DfRadius {
   static const double sm = 8, md = 12, lg = 16, xl = 24, full = 999;
+
+  // Component radii taken from the Figma screens.
+  /// Icon badges inside setting rows.
+  static const double badge = 10;
+
+  /// Text fields and small banners.
+  static const double field = 14;
+
+  /// Task rows, event rows and the quick-add box.
+  static const double row = 18;
+
+  /// Cards and grouped lists.
+  static const double card = 22;
+
+  /// Bottom sheets.
+  static const double sheet = 28;
 }
 
 /// Text styles from the Figma type scale (Plus Jakarta Sans).
@@ -254,7 +270,8 @@ ThemeData buildTheme(Brightness brightness) {
       backgroundColor: c.surface,
       surfaceTintColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(DfRadius.xl)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DfRadius.sheet)),
       ),
     ),
     snackBarTheme: SnackBarThemeData(

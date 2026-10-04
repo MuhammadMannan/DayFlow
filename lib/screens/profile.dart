@@ -1,12 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/app_state.dart';
 import '../data/device_calendar.dart';
-import '../models/models.dart';
+import '../data/notifications.dart';
+import '../data/sample_data.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import 'calendars.dart';
+import 'tags.dart';
 
 void openProfile(BuildContext context) {
   final state = AppScope.read(context);
@@ -59,6 +63,22 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  /// Turning a notification switch on asks iOS for permission if needed.
+  Future<void> _setNotify(
+      BuildContext context, AppState state, String key, bool on) async {
+    if (on && !await Notifications.allowed()) {
+      final granted = await Notifications.requestPermission();
+      if (!granted && context.mounted) {
+        showMessage(context,
+            'Notifications are off for DayFlow. Turn them on in Settings › Notifications.');
+      }
+    }
+    if (context.mounted) await _save(context, state, {key: on});
+  }
+
+  static String _hourLabel(int h) =>
+      '${h % 12 == 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}';
+
   Future<void> _save(
       BuildContext context, AppState state, Map<String, dynamic> patch) async {
     try {
@@ -78,7 +98,11 @@ class ProfileScreen extends StatelessWidget {
     final streak = state.streak;
 
     final calendarValue = switch (state.calendarAccess) {
-      CalendarAccess.granted => s.showCalendar ? 'Connected' : 'Hidden',
+      CalendarAccess.granted => !s.showCalendar
+          ? 'Hidden'
+          : state.calendars.isEmpty
+              ? 'Connected'
+              : '${state.shownCalendarCount} connected',
       CalendarAccess.denied => 'Access off',
       CalendarAccess.notDetermined => 'Not connected',
     };
@@ -106,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: DfSpace.s4),
             DfCard(
-              radius: DfRadius.xl,
+              radius: DfRadius.card,
               padding: const EdgeInsets.all(DfSpace.s5),
               child: Column(
                 children: [
@@ -237,7 +261,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: LucideIcons.calendar,
                     tint: c.event,
                     bg: c.eventSoft,
-                    label: 'Calendar',
+                    label: 'Calendars',
                     value: calendarValue,
                     onTap: () async {
                       switch (state.calendarAccess) {
@@ -247,8 +271,15 @@ class ProfileScreen extends StatelessWidget {
                           showMessage(context,
                               'Turn on calendar access in Settings › DayFlow › Calendars.');
                         case CalendarAccess.granted:
-                          await _save(context, state,
-                              {'showCalendar': !s.showCalendar});
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => AppScope(
+                                  state: state,
+                                  child: const CalendarsScreen()),
+                            ),
+                          );
                       }
                     },
                   ),
@@ -268,7 +299,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: Switch(
                       value: s.remindersOn,
                       onChanged: (v) =>
-                          _save(context, state, {'remindersOn': v}),
+                          _setNotify(context, state, 'remindersOn', v),
                     ),
                   ),
                   Divider(color: c.border),
@@ -277,19 +308,46 @@ class ProfileScreen extends StatelessWidget {
                     tint: c.flame,
                     bg: c.flameSoft,
                     label: 'Streak-at-risk nudge',
-                    trailing: Switch(
-                      value: s.nudgeOn,
-                      onChanged: (v) => _save(context, state, {'nudgeOn': v}),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (s.nudgeOn)
+                          // Tap the time to change when the nudge is sent.
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () async {
+                              final v = await _choose<int>(
+                                context,
+                                title: 'Nudge time',
+                                description:
+                                    'Sent only on days when you have not finished a task yet.',
+                                options: [
+                                  for (final h in const [17, 18, 19, 20, 21, 22])
+                                    (h, _hourLabel(h)),
+                                ],
+                                current: s.nudgeHour,
+                              );
+                              if (v != null && context.mounted) {
+                                await _save(context, state, {'nudgeHour': v});
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 12),
+                              child: Text(_hourLabel(s.nudgeHour),
+                                  style: DfText.small
+                                      .copyWith(color: c.textMuted)),
+                            ),
+                          ),
+                        Switch(
+                          value: s.nudgeOn,
+                          onChanged: (v) =>
+                              _setNotify(context, state, 'nudgeOn', v),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 4),
-              child: Text(
-                'Notifications are not sent yet in this build. These switches save your preference.',
-                style: DfText.caption.copyWith(color: c.textMuted),
               ),
             ),
             const _Group('Appearance'),
@@ -354,9 +412,60 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
             ),
+            // Development builds only: never shown in a release.
+            if (kDebugMode) ...[
+              const _Group('Developer'),
+              DfCard(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Column(
+                  children: [
+                    _SettingRow(
+                      icon: LucideIcons.sparkles,
+                      tint: c.primary,
+                      bg: c.primarySoft,
+                      label: 'Load sample data',
+                      value: 'Replaces tasks',
+                      onTap: () async {
+                        showMessage(context, 'Loading sample data…');
+                        try {
+                          await SampleData.load(state.user.uid);
+                          if (context.mounted) {
+                            showMessage(context, 'Sample data loaded.');
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            showMessage(context, 'Could not load sample data.');
+                          }
+                        }
+                      },
+                    ),
+                    Divider(color: c.border),
+                    _SettingRow(
+                      icon: LucideIcons.trash,
+                      tint: c.danger,
+                      bg: c.dangerSoft,
+                      label: 'Clear all tasks',
+                      showChevron: false,
+                      onTap: () async {
+                        try {
+                          await SampleData.clear(state.user.uid);
+                          if (context.mounted) {
+                            showMessage(context, 'All tasks cleared.');
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            showMessage(context, 'Could not clear tasks.');
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: DfSpace.s4),
             Center(
-              child: Text('DayFlow 2.0',
+              child: Text('Sign out asks for confirmation. DayFlow 2.0',
                   style: DfText.caption.copyWith(color: c.textMuted)),
             ),
           ],
@@ -413,7 +522,7 @@ class _SettingRow extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                  color: bg, borderRadius: BorderRadius.circular(DfRadius.sm)),
+                  color: bg, borderRadius: BorderRadius.circular(DfRadius.badge)),
               child: Icon(icon, size: 18, color: tint),
             ),
             const SizedBox(width: 12),
@@ -429,235 +538,6 @@ class _SettingRow extends StatelessWidget {
               const SizedBox(width: 8),
               Icon(LucideIcons.chevronRight, size: 18, color: c.textMuted),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class TagsScreen extends StatefulWidget {
-  const TagsScreen({super.key});
-
-  @override
-  State<TagsScreen> createState() => _TagsScreenState();
-}
-
-class _TagsScreenState extends State<TagsScreen> {
-  final _name = TextEditingController();
-  int _color = 4;
-  String? _error;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  Future<void> _create() async {
-    final state = AppScope.read(context);
-    final name = _name.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = 'Give the tag a name.');
-      return;
-    }
-    if (state.tags.any((t) => t.name.toLowerCase() == name.toLowerCase())) {
-      setState(() => _error = 'You already have a tag with that name.');
-      return;
-    }
-    try {
-      await state.addTag(name, _color);
-      _name.clear();
-      if (mounted) {
-        FocusScope.of(context).unfocus();
-        setState(() => _error = null);
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _error = 'Could not save. Check your connection.');
-      }
-    }
-  }
-
-  Future<void> _delete(Tag tag, int count) async {
-    final c = context.df;
-    final state = AppScope.read(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Delete “${tag.name}”?'),
-        content: Text(count == 0
-            ? 'No tasks use this tag.'
-            : '$count ${count == 1 ? 'task keeps' : 'tasks keep'} their details but will show no tag.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete', style: TextStyle(color: c.danger)),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await state.deleteTag(tag);
-    } catch (_) {
-      if (mounted) {
-        showMessage(context, 'Could not delete. Check your connection.');
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.df;
-    final state = AppScope.of(context);
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-              DfSpace.s5, DfSpace.s2, DfSpace.s5, DfSpace.s8),
-          children: [
-            Row(
-              children: [
-                DfIconButton(
-                  icon: LucideIcons.chevronLeft,
-                  semanticLabel: 'Back',
-                  onPressed: () => Navigator.pop(context),
-                ),
-                Expanded(
-                  child: Text('Tags',
-                      textAlign: TextAlign.center,
-                      style: DfText.h3.copyWith(color: c.text)),
-                ),
-                const SizedBox(width: 40),
-              ],
-            ),
-            const SizedBox(height: DfSpace.s4),
-            Text(
-              'Each task gets one tag. Tags drive colours on the calendar and the breakdown in Analytics.',
-              style: DfText.small.copyWith(color: c.textSecondary),
-            ),
-            const SizedBox(height: DfSpace.s4),
-            if (state.tags.isNotEmpty)
-              DfCard(
-                radius: DfRadius.xl,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Column(
-                  children: [
-                    for (var i = 0; i < state.tags.length; i++) ...[
-                      if (i > 0) Divider(color: c.border),
-                      Builder(builder: (context) {
-                        final tag = state.tags[i];
-                        final count = state.tasks
-                            .where((t) => t.tagId == tag.id)
-                            .length;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: c.tagSoft(tag.color),
-                                  borderRadius:
-                                      BorderRadius.circular(DfRadius.sm),
-                                ),
-                                child: Icon(LucideIcons.tag,
-                                    size: 18, color: c.tag(tag.color)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(tag.name,
-                                        style: DfText.bodyStrong
-                                            .copyWith(color: c.text)),
-                                    Text(
-                                        '$count ${count == 1 ? 'task' : 'tasks'}',
-                                        style: DfText.small
-                                            .copyWith(color: c.textMuted)),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'Delete ${tag.name}',
-                                icon: Icon(LucideIcons.trash2,
-                                    size: 18, color: c.textMuted),
-                                onPressed: () => _delete(tag, count),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ],
-                ),
-              ),
-            const SizedBox(height: DfSpace.s5),
-            const Overline('New tag'),
-            const SizedBox(height: DfSpace.s2),
-            DfCard(
-              radius: DfRadius.xl,
-              padding: const EdgeInsets.all(DfSpace.s4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DfTextField(
-                    controller: _name,
-                    label: 'Name',
-                    hint: 'Side project',
-                    icon: LucideIcons.tag,
-                    error: _error,
-                    onSubmitted: (_) => _create(),
-                  ),
-                  const SizedBox(height: DfSpace.s4),
-                  Text('Colour',
-                      style: DfText.smallStrong.copyWith(color: c.text)),
-                  const SizedBox(height: DfSpace.s2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      for (var i = 0; i < c.tagColors.length; i++)
-                        Semantics(
-                          button: true,
-                          selected: _color == i,
-                          label: 'Colour ${i + 1}',
-                          child: GestureDetector(
-                            onTap: () => setState(() => _color = i),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: _color == i
-                                      ? c.text
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: c.tagColors[i],
-                                    shape: BoxShape.circle),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: DfSpace.s4),
-                  DfButton(label: 'Create tag', onPressed: _create),
-                ],
-              ),
-            ),
           ],
         ),
       ),

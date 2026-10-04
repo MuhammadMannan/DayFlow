@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/tokens.dart';
@@ -11,7 +12,7 @@ String authMessage(FirebaseAuthException e) => switch (e.code) {
       'wrong-password' ||
       'invalid-credential' ||
       'invalid-login-credentials' =>
-        'That email and password don’t match an account.',
+        'That password doesn’t match this account.',
       'email-already-in-use' =>
         'There’s already an account with that email. Try signing in.',
       'weak-password' => 'Use at least 6 characters for your password.',
@@ -47,82 +48,318 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.df;
-    const points = [
-      (LucideIcons.flame, 'Build a streak', 'Finish one task a day to keep it going.'),
-      (LucideIcons.calendar, 'See your whole day', 'Tasks and calendar events in one place.'),
-      (LucideIcons.chartColumn, 'Know where time goes', 'A heatmap and a breakdown by tag.'),
-    ];
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(DfSpace.s6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(),
-              const DfLogo(),
-              const SizedBox(height: DfSpace.s6),
-              Text('Plan the day.\nKeep the streak.',
-                  style: DfText.display.copyWith(color: c.text)),
-              const SizedBox(height: DfSpace.s3),
-              Text(
-                'Tasks, reminders and your calendar in one place.',
-                style: DfText.body.copyWith(color: c.textSecondary),
-              ),
-              const SizedBox(height: DfSpace.s8),
-              for (final (icon, title, body) in points)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: DfSpace.s4),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: c.primarySoft,
-                          borderRadius: BorderRadius.circular(DfRadius.md),
+    // The preview cards always use the light palette on the blue backdrop.
+    const light = DfColors.light;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: light.primary,
+        body: Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: _BackdropPainter())),
+            Column(
+              children: [
+                // A sample day, to show what the app looks like in use.
+                Expanded(
+                  child: SafeArea(
+                    bottom: false,
+                    child: ExcludeSemantics(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 36, vertical: DfSpace.s4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _Pill(
+                                    color: light.flameSoft,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(LucideIcons.flame,
+                                            size: 16, color: light.flame),
+                                        const SizedBox(width: 6),
+                                        Text('12 days',
+                                            style: DfText.smallStrong
+                                                .copyWith(color: light.flame)),
+                                      ],
+                                    ),
+                                  ),
+                                  _Pill(
+                                    color: Colors.white,
+                                    child: Text('3 of 5 today',
+                                        style: DfText.smallStrong
+                                            .copyWith(color: light.primary)),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: DfSpace.s3),
+                              _SampleTask(
+                                title: 'Morning run',
+                                time: '7:30 AM',
+                                tag: 'Health',
+                                tagIndex: 3,
+                                done: true,
+                              ),
+                              const SizedBox(height: DfSpace.s3),
+                              Container(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 12, 16, 12),
+                                decoration: BoxDecoration(
+                                  color: light.eventSoft,
+                                  borderRadius:
+                                      BorderRadius.circular(DfRadius.lg),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 3,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: light.event,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Team standup',
+                                              style: DfText.bodyStrong
+                                                  .copyWith(color: light.text)),
+                                          Text('6:30 – 7:00 PM · Google Meet',
+                                              style: DfText.small.copyWith(
+                                                  color: light.textSecondary)),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(LucideIcons.calendar,
+                                        size: 18, color: light.event),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: DfSpace.s3),
+                              _SampleTask(
+                                title: 'Call mom',
+                                time: '8:30 PM',
+                                tag: 'Personal',
+                                tagIndex: 2,
+                                bell: true,
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Icon(icon, size: 20, color: c.primary),
                       ),
-                      const SizedBox(width: DfSpace.s3),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(title,
-                                style:
-                                    DfText.bodyStrong.copyWith(color: c.text)),
-                            Text(body,
-                                style: DfText.small
-                                    .copyWith(color: c.textSecondary)),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              const Spacer(flex: 2),
-              DfButton(
-                label: 'Create an account',
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AuthFormScreen(signUp: true)),
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: c.surface,
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(32)),
+                    boxShadow: DfShadow.sheet,
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                          DfSpace.s6, DfSpace.s6, DfSpace.s6, DfSpace.s3),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: c.primary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(LucideIcons.check,
+                                    color: Colors.white, size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('DayFlow',
+                                  style: DfText.h3.copyWith(color: c.text)),
+                            ],
+                          ),
+                          const SizedBox(height: DfSpace.s3),
+                          Text('Plan the day.\nKeep the streak.',
+                              style: DfText.display.copyWith(color: c.text)),
+                          const SizedBox(height: DfSpace.s3),
+                          Text(
+                            'Tasks, reminders and your calendar in one place, with a streak that rewards showing up.',
+                            style:
+                                DfText.body.copyWith(color: c.textSecondary),
+                          ),
+                          const SizedBox(height: DfSpace.s4),
+                          DfButton(
+                            label: 'Get started',
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const AuthFormScreen(signUp: true)),
+                            ),
+                          ),
+                          const SizedBox(height: DfSpace.s1),
+                          Center(
+                            child: TextButton(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const AuthFormScreen(signUp: false)),
+                              ),
+                              child: Text('I already have an account',
+                                  style: DfText.bodyStrong
+                                      .copyWith(color: c.primary)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: DfSpace.s3),
-              DfButton(
-                label: 'I already have an account',
-                kind: DfButtonKind.secondary,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AuthFormScreen(signUp: false)),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _BackdropPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.07);
+    canvas.drawCircle(
+        Offset(size.width * 0.15, size.height * 0.16), size.width * 0.62, paint);
+    canvas.drawCircle(
+        Offset(size.width * 0.95, size.height * 0.48), size.width * 0.52, paint);
+  }
+
+  @override
+  bool shouldRepaint(_BackdropPainter old) => false;
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.color, required this.child});
+  final Color color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(DfRadius.full),
+        ),
+        child: child,
+      );
+}
+
+class _SampleTask extends StatelessWidget {
+  const _SampleTask({
+    required this.title,
+    required this.time,
+    required this.tag,
+    required this.tagIndex,
+    this.done = false,
+    this.bell = false,
+  });
+
+  final String title;
+  final String time;
+  final String tag;
+  final int tagIndex;
+  final bool done;
+  final bool bell;
+
+  @override
+  Widget build(BuildContext context) {
+    const light = DfColors.light;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DfRadius.lg),
+        boxShadow: DfShadow.card,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? light.success : Colors.transparent,
+              border: Border.all(
+                  color: done ? light.success : light.borderStrong, width: 2),
+            ),
+            child: done
+                ? const Icon(LucideIcons.check, size: 14, color: Colors.white)
+                : null,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: DfText.bodyStrong.copyWith(
+                        color: done ? light.textMuted : light.text)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(LucideIcons.clock, size: 14, color: light.textMuted),
+                    const SizedBox(width: 4),
+                    Text(time,
+                        style: DfText.small.copyWith(color: light.textMuted)),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: light.tagSoft(tagIndex),
+                        borderRadius: BorderRadius.circular(DfRadius.full),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                                color: light.tag(tagIndex),
+                                shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(tag,
+                              style: DfText.smallStrong
+                                  .copyWith(color: light.tag(tagIndex))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (bell) Icon(LucideIcons.bell, size: 18, color: light.textMuted),
+        ],
       ),
     );
   }
@@ -144,6 +381,15 @@ class _AuthFormScreenState extends State<AuthFormScreen> {
   bool _busy = false;
   String? _emailError;
   String? _passwordError;
+
+  @override
+  void initState() {
+    super.initState();
+    // Keeps the password strength hint in step with typing.
+    _password.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -227,10 +473,10 @@ class _AuthFormScreenState extends State<AuthFormScreen> {
                         const SizedBox(height: 4),
                         Text(
                           signUp
-                              ? 'Start your first streak today.'
+                              ? 'Your tasks and streak sync across devices.'
                               : 'Sign in to pick up your streak.',
-                          style:
-                              DfText.body.copyWith(color: c.textSecondary),
+                          style: DfText.bodyRegular
+                              .copyWith(color: c.textSecondary),
                         ),
                         const SizedBox(height: DfSpace.s6),
                         if (signUp) ...[
@@ -277,6 +523,21 @@ class _AuthFormScreenState extends State<AuthFormScreen> {
                             onPressed: () => setState(() => _show = !_show),
                           ),
                         ),
+                        if (signUp &&
+                            _passwordError == null &&
+                            _password.text.length >= 8) ...[
+                          const SizedBox(height: DfSpace.s2),
+                          Row(
+                            children: [
+                              Icon(LucideIcons.check,
+                                  size: 14, color: c.success),
+                              const SizedBox(width: 6),
+                              Text('Strong password, 8+ characters',
+                                  style: DfText.small
+                                      .copyWith(color: c.textSecondary)),
+                            ],
+                          ),
+                        ],
                         if (!signUp)
                           Align(
                             alignment: Alignment.centerRight,
@@ -379,6 +640,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
   }
 
+  /// "muhammad@example.com" becomes "m•••@example.com".
+  String get _masked {
+    final email = _email.text.trim();
+    final at = email.indexOf('@');
+    if (at < 1) return email;
+    return '${email[0]}•••${email.substring(at)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.df;
@@ -398,30 +667,92 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: DfSpace.s4),
               Text('Reset your password',
                   style: DfText.h1.copyWith(color: c.text)),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
-                _sent
-                    ? 'If an account exists for that email, a reset link is on its way. Check your inbox.'
-                    : 'Enter your email and we’ll send you a link to set a new one.',
-                style: DfText.body.copyWith(color: c.textSecondary),
+                'Enter the email you signed up with and we’ll send a link to set a new password.',
+                style: DfText.bodyRegular.copyWith(color: c.textSecondary),
               ),
-              const SizedBox(height: DfSpace.s6),
-              if (!_sent)
-                DfTextField(
-                  controller: _email,
-                  label: 'Email',
-                  hint: 'you@example.com',
-                  icon: LucideIcons.mail,
-                  keyboardType: TextInputType.emailAddress,
-                  error: _error,
-                  onSubmitted: (_) => _send(),
-                ),
-              const Spacer(),
+              const SizedBox(height: DfSpace.s4),
+              DfTextField(
+                controller: _email,
+                label: 'Email',
+                hint: 'you@example.com',
+                icon: LucideIcons.mail,
+                keyboardType: TextInputType.emailAddress,
+                error: _error,
+                onSubmitted: (_) => _send(),
+              ),
+              const SizedBox(height: DfSpace.s4),
               DfButton(
-                label: _sent ? 'Back to sign in' : 'Send reset link',
+                label: 'Send reset link',
                 loading: _busy,
-                onPressed: _sent ? () => Navigator.pop(context) : _send,
+                onPressed: _send,
               ),
+              if (_sent) ...[
+                const SizedBox(height: DfSpace.s4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: c.successSoft,
+                    borderRadius: BorderRadius.circular(DfRadius.lg),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                            color: c.success, shape: BoxShape.circle),
+                        child: const Icon(LucideIcons.mail,
+                            size: 16, color: Colors.white),
+                      ),
+                      const SizedBox(width: DfSpace.s3),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Check your inbox',
+                                style:
+                                    DfText.bodyStrong.copyWith(color: c.text)),
+                            const SizedBox(height: 2),
+                            Text(
+                              'If an account exists for $_masked, a link is on its way.',
+                              style: DfText.small
+                                  .copyWith(color: c.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const Spacer(),
+              if (_sent)
+                Center(
+                  child: GestureDetector(
+                    onTap: _busy ? null : _send,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Text.rich(
+                        TextSpan(
+                          text: 'Didn’t get it? ',
+                          style:
+                              DfText.small.copyWith(color: c.textSecondary),
+                          children: [
+                            TextSpan(
+                              text: 'Resend',
+                              style: DfText.smallStrong
+                                  .copyWith(color: c.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

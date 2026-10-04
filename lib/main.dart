@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'data/app_state.dart';
+import 'data/notifications.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth.dart';
+import 'screens/onboarding.dart';
 import 'screens/shell.dart';
 import 'theme/tokens.dart';
 
@@ -13,6 +15,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Notifications.init();
   runApp(const DayFlowApp());
 }
 
@@ -43,6 +46,8 @@ class _DayFlowAppState extends State<DayFlowApp> with WidgetsBindingObserver {
     }
     _state?.removeListener(_rebuild);
     _state?.dispose();
+    // Reminders belong to the account, so drop them when it changes.
+    if (user == null) Notifications.clear();
     _state = user == null ? null : (AppState(user)..addListener(_rebuild));
     setState(() {});
   }
@@ -53,7 +58,10 @@ class _DayFlowAppState extends State<DayFlowApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Pick up calendar changes and a new day when returning to the app.
-    if (state == AppLifecycleState.resumed) _state?.refreshCalendar();
+    if (state == AppLifecycleState.resumed) {
+      _state?.refreshCalendar();
+      _state?.syncNotifications();
+    }
   }
 
   @override
@@ -84,7 +92,11 @@ class _DayFlowAppState extends State<DayFlowApp> with WidgetsBindingObserver {
               : AppScope(
                   key: ValueKey(state.user.uid),
                   state: state,
-                  child: const Shell(),
+                  child: !state.settingsLoaded
+                      ? const Scaffold(body: SizedBox.shrink())
+                      : state.settings.onboarded
+                          ? const Shell()
+                          : const OnboardingScreen(),
                 ),
     );
   }

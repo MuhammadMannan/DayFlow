@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -11,9 +12,13 @@ import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'add_task.dart';
+import 'milestone.dart';
 import 'profile.dart';
 import 'shell.dart';
 import 'task_detail.dart';
+
+/// Whether the finished list is collapsed in the all-done state.
+final _hideDone = ValueNotifier<bool>(false);
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,6 +40,8 @@ class HomeScreen extends StatelessWidget {
     final overdue = state.overdue;
     final events = state.eventsOn(today);
     final isEmpty = state.loaded && state.tasks.isEmpty;
+    final allDone =
+        todayTasks.isNotEmpty && todayTasks.every((t) => t.isDone);
 
     return SafeArea(
       bottom: false,
@@ -57,7 +64,17 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              StreakChip(days: streak.current),
+              GestureDetector(
+                // Debug builds only: long-press to preview the celebration.
+                onLongPress: kDebugMode
+                    ? () => showMilestone(context, days: 7, completions: {
+                          // Sample week so the preview looks like the real thing.
+                          for (var i = 0; i < 7; i++)
+                            DateTime(today.year, today.month, today.day - i): 1,
+                        })
+                    : null,
+                child: StreakChip(days: streak.current),
+              ),
               const SizedBox(width: DfSpace.s2),
               Semantics(
                 button: true,
@@ -124,33 +141,38 @@ class HomeScreen extends StatelessWidget {
                   onToggle: (v) => toggleTask(context, t, v),
                   onTap: () => openTaskDetail(context, t),
                 ),
-                const SizedBox(height: DfSpace.s2),
+                const SizedBox(height: 10),
               ],
             ],
             const SizedBox(height: DfSpace.s5),
-            SectionHeader(
-              title: 'Today · ${todayTasks.length + events.length}',
-              action: 'See all',
-              onAction: () => Shell.of(context).goTo(2),
-            ),
-            const SizedBox(height: DfSpace.s3),
-            if (todayTasks.isEmpty && events.isEmpty)
-              DfCard(
-                onTap: () => showAddTask(context, day: today),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.plus, size: 18, color: c.primary),
-                    const SizedBox(width: DfSpace.s3),
-                    Expanded(
-                      child: Text('Nothing planned today. Add a task.',
-                          style: DfText.body.copyWith(color: c.textSecondary)),
-                    ),
-                  ],
-                ),
-              )
-            else
-              ..._timeline(context, todayTasks, events),
-            ..._comingUp(context, state, today),
+            if (allDone)
+              ..._allDoneSections(context, state, todayTasks, events, today)
+            else ...[
+              SectionHeader(
+                title: 'Today · ${todayTasks.length + events.length}',
+                action: 'See all',
+                onAction: () => Shell.of(context).goTo(2),
+              ),
+              const SizedBox(height: DfSpace.s3),
+              if (todayTasks.isEmpty && events.isEmpty)
+                DfCard(
+                  onTap: () => showAddTask(context, day: today),
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.plus, size: 18, color: c.primary),
+                      const SizedBox(width: DfSpace.s3),
+                      Expanded(
+                        child: Text('Nothing planned today. Add a task.',
+                            style:
+                                DfText.body.copyWith(color: c.textSecondary)),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ..._timeline(context, todayTasks, events),
+              ..._comingUp(context, state, today),
+            ],
           ],
           if (state.loaded &&
               state.calendarAccess == CalendarAccess.notDetermined) ...[
@@ -171,7 +193,7 @@ class HomeScreen extends StatelessWidget {
     ];
     return [
       DfCard(
-        radius: DfRadius.xl,
+        radius: DfRadius.card,
         padding: const EdgeInsets.all(DfSpace.s5),
         child: Column(
           children: [
@@ -275,20 +297,24 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Timed tasks and events in time order, then untimed tasks.
+  /// Completed tasks first, in the order they were finished, then timed
+  /// tasks and events in time order, then untimed tasks.
   List<Widget> _timeline(
       BuildContext context, List<Task> tasks, List<CalEvent> events) {
+    TaskRow row(Task t) => TaskRow(
+          task: t,
+          onToggle: (v) => toggleTask(context, t, v),
+          onTap: () => openTaskDetail(context, t),
+        );
+    final done = tasks.where((t) => t.isDone).toList()
+      ..sort((a, b) => a.completedAt!.compareTo(b.completedAt!));
     final items = <(DateTime, Widget)>[];
     final untimed = <Widget>[];
-    for (final t in tasks) {
-      final row = TaskRow(
-        task: t,
-        onToggle: (v) => toggleTask(context, t, v),
-        onTap: () => openTaskDetail(context, t),
-      );
+    for (final t in tasks.where((t) => !t.isDone)) {
       if (t.hasTime && t.isOn(DateTime.now())) {
-        items.add((t.due!, row));
+        items.add((t.due!, row(t)));
       } else {
-        untimed.add(row);
+        untimed.add(row(t));
       }
     }
     for (final e in events) {
@@ -296,10 +322,71 @@ class HomeScreen extends StatelessWidget {
     }
     items.sort((a, b) => a.$1.compareTo(b.$1));
     return [
-      for (final w in [...items.map((i) => i.$2), ...untimed]) ...[
+      for (final w in [
+        ...done.map(row),
+        ...items.map((i) => i.$2),
+        ...untimed,
+      ]) ...[
         w,
-        const SizedBox(height: DfSpace.s2),
+        const SizedBox(height: 10),
       ],
+    ];
+  }
+
+  /// Once everything planned is done: the finished list (which can be
+  /// hidden) and a look at tomorrow.
+  List<Widget> _allDoneSections(BuildContext context, AppState state,
+      List<Task> todayTasks, List<CalEvent> events, DateTime today) {
+    final c = context.df;
+    final tomorrow = today.add(const Duration(days: 1));
+    final tomorrowTasks =
+        state.tasksOn(tomorrow).where((t) => !t.isDone).toList();
+    return [
+      ValueListenableBuilder<bool>(
+        valueListenable: _hideDone,
+        builder: (context, hidden, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionHeader(
+              title: 'Done today · ${todayTasks.length}',
+              action: hidden ? 'Show' : 'Hide',
+              onAction: () => _hideDone.value = !hidden,
+            ),
+            const SizedBox(height: DfSpace.s3),
+            if (!hidden) ..._timeline(context, todayTasks, events),
+          ],
+        ),
+      ),
+      const SizedBox(height: DfSpace.s3),
+      SectionHeader(
+        title: 'Tomorrow',
+        action: 'Plan',
+        onAction: () => showAddTask(context, day: tomorrow),
+      ),
+      const SizedBox(height: DfSpace.s3),
+      if (tomorrowTasks.isEmpty)
+        DfCard(
+          onTap: () => showAddTask(context, day: tomorrow),
+          child: Row(
+            children: [
+              Icon(LucideIcons.plus, size: 18, color: c.primary),
+              const SizedBox(width: DfSpace.s3),
+              Expanded(
+                child: Text('Nothing lined up yet. Plan tomorrow.',
+                    style: DfText.body.copyWith(color: c.textSecondary)),
+              ),
+            ],
+          ),
+        )
+      else
+        for (final t in tomorrowTasks) ...[
+          TaskRow(
+            task: t,
+            onToggle: (v) => toggleTask(context, t, v),
+            onTap: () => openTaskDetail(context, t),
+          ),
+          const SizedBox(height: 10),
+        ],
     ];
   }
 
@@ -369,7 +456,6 @@ class _WeekStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.df;
     final today = dateOnly(DateTime.now());
     final monday = today.subtract(Duration(days: today.weekday - 1));
     return Row(
@@ -378,40 +464,13 @@ class _WeekStrip extends StatelessWidget {
           Expanded(
             child: Builder(builder: (context) {
               final day = monday.add(Duration(days: i));
-              final isToday = day == today;
-              final has = state.tasksOn(day).isNotEmpty ||
-                  state.eventsOn(day).isNotEmpty;
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isToday ? c.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(DfRadius.md),
-                ),
-                child: Column(
-                  children: [
-                    Text(DateFormat('EEE').format(day),
-                        style: DfText.caption.copyWith(
-                            color: isToday ? Colors.white : c.textMuted)),
-                    const SizedBox(height: 2),
-                    Text('${day.day}',
-                        style: DfText.h3.copyWith(
-                            color: isToday ? Colors.white : c.text)),
-                    const SizedBox(height: 4),
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: !has
-                            ? Colors.transparent
-                            : isToday
-                                ? Colors.white
-                                : c.primary,
-                      ),
-                    ),
-                  ],
-                ),
+              return DayPill(
+                day: day,
+                // Home always shows today as the selected day.
+                selected: day == today,
+                isToday: day == today,
+                hasItems: state.tasksOn(day).isNotEmpty ||
+                    state.eventsOn(day).isNotEmpty,
               );
             }),
           ),
@@ -460,12 +519,33 @@ class _ProgressCard extends StatelessWidget {
         body = '$left to go. Finish one to start a streak.';
       }
     }
-    final goalLine = goal > 0 ? ' Goal: $done of $goal.' : '';
+    final goalLine = goal == 0
+        ? ''
+        : done >= goal
+            ? ' Daily goal met.'
+            : ' Goal: $done of $goal.';
 
     final days = completionsByDay(state.tasks);
     final today = dateOnly(DateTime.now());
     final monday = today.subtract(Duration(days: today.weekday - 1));
     const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    if (total > 0 && left == 0) {
+      final tomorrow = state
+          .tasksOn(today.add(const Duration(days: 1)))
+          .where((t) => !t.isDone)
+          .length;
+      final streakLine = streak.current > 1
+          ? 'Streak is now ${streak.current} days.'
+          : 'That starts your streak.';
+      final tomorrowLine = tomorrow == 0
+          ? ' Nothing lined up for tomorrow yet.'
+          : ' Tomorrow has $tomorrow ${tomorrow == 1 ? 'task' : 'tasks'} lined up.';
+      return _AllDoneCard(
+        title: 'All $total done. Nice work.',
+        body: '$streakLine$tomorrowLine$goalLine',
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(DfSpace.s5),
@@ -505,18 +585,33 @@ class _ProgressCard extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 6),
                         child: Column(
                           children: [
-                            Container(
-                              width: 14,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: (days[monday.add(Duration(days: i))] ??
-                                            0) >
-                                        0
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.25),
-                              ),
-                            ),
+                            Builder(builder: (context) {
+                              final day = monday.add(Duration(days: i));
+                              final done = (days[day] ?? 0) > 0;
+                              // A day the weekly freeze covered.
+                              final frozen = streak.frozenDays.contains(day);
+                              return Semantics(
+                                label: done
+                                    ? 'Completed'
+                                    : frozen
+                                        ? 'Streak freeze used'
+                                        : 'Not completed',
+                                child: Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: done
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.25),
+                                  ),
+                                  child: frozen && !done
+                                      ? const Icon(LucideIcons.snowflake,
+                                          size: 10, color: Colors.white)
+                                      : null,
+                                ),
+                              );
+                            }),
                             const SizedBox(height: 4),
                             Text(letters[i],
                                 style: DfText.overline.copyWith(
@@ -533,6 +628,61 @@ class _ProgressCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Replaces the progress card once everything planned for today is done.
+class _AllDoneCard extends StatelessWidget {
+  const _AllDoneCard({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.df;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.94, end: 1),
+      duration: MediaQuery.of(context).disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 420),
+      curve: Curves.easeOutBack,
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(DfSpace.s5),
+        decoration: BoxDecoration(
+          color: c.success,
+          borderRadius: BorderRadius.circular(DfRadius.xl),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 5),
+              ),
+              child: const Icon(LucideIcons.check,
+                  color: Colors.white, size: 32),
+            ),
+            const SizedBox(height: DfSpace.s3),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: DfText.h2.copyWith(color: Colors.white)),
+            const SizedBox(height: 4),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: DfText.small
+                  .copyWith(color: Colors.white.withValues(alpha: 0.9)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -596,7 +746,7 @@ class _ComingRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
                 color: isEvent ? c.eventSoft : c.surfaceMuted,
-                borderRadius: BorderRadius.circular(DfRadius.sm),
+                borderRadius: BorderRadius.circular(DfRadius.md),
               ),
               child: Column(
                 children: [

@@ -1,6 +1,9 @@
+import 'package:dayflow/data/notifications.dart';
 import 'package:dayflow/data/quick_parse.dart';
 import 'package:dayflow/data/streak.dart';
 import 'package:dayflow/models/models.dart';
+import 'package:dayflow/screens/day_timeline.dart';
+import 'package:dayflow/screens/milestone.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Task _done(DateTime day) => Task(
@@ -41,6 +44,7 @@ void main() {
           [5, 4, 2, 1, 0].map((d) => _done(ago(d))).toList(), now);
       expect(s.current, 5);
       expect(s.freezeAvailable, isFalse);
+      expect(s.frozenDays, {ago(3)});
     });
 
     test('a second missed day in the same week resets', () {
@@ -88,6 +92,13 @@ void main() {
       expect(p.due, DateTime(2026, 10, 5, 19, 30));
     });
 
+    test('reports where the phrases sit in the input', () {
+      const input = 'Call mom tomorrow 6pm';
+      final p = parseQuick(input, now: now);
+      final found = p.ranges.map((r) => input.substring(r.$1, r.$2)).toList();
+      expect(found, ['tomorrow', '6pm']);
+    });
+
     test('plain text is left alone', () {
       final p = parseQuick('Buy 2 notebooks', now: now);
       expect(p.title, 'Buy 2 notebooks');
@@ -97,6 +108,115 @@ void main() {
     test('12am and 12pm', () {
       expect(parseQuick('x 12pm', now: now).hour, 12);
       expect(parseQuick('x 12am', now: now).hour, 0);
+    });
+  });
+
+  group('planNotifications', () {
+    Task timed(String id, DateTime due,
+            {bool remind = true, int lead = 0, DateTime? done}) =>
+        Task(
+          id: id,
+          title: id,
+          due: due,
+          hasTime: true,
+          remind: remind,
+          remindMinutes: lead,
+          createdAt: now,
+          completedAt: done,
+        );
+
+    test('schedules future reminders with lead time', () {
+      final plan = planNotifications(
+        tasks: [timed('a', DateTime(2026, 10, 3, 20), lead: 60)],
+        tags: const [],
+        settings: const Settings(nudgeOn: false),
+        now: now,
+      );
+      expect(plan, hasLength(1));
+      expect(plan.single.at, DateTime(2026, 10, 3, 19));
+      expect(plan.single.body, 'At 8:00 PM');
+    });
+
+    test('skips past, completed and reminder-off tasks', () {
+      final plan = planNotifications(
+        tasks: [
+          timed('past', DateTime(2026, 10, 3, 9)),
+          timed('done', DateTime(2026, 10, 3, 21), done: now),
+          timed('off', DateTime(2026, 10, 3, 21), remind: false),
+        ],
+        tags: const [],
+        settings: const Settings(nudgeOn: false),
+        now: now,
+      );
+      expect(plan, isEmpty);
+    });
+
+    test('respects the reminders switch', () {
+      final plan = planNotifications(
+        tasks: [timed('a', DateTime(2026, 10, 3, 21))],
+        tags: const [],
+        settings: const Settings(remindersOn: false, nudgeOn: false),
+        now: now,
+      );
+      expect(plan, isEmpty);
+    });
+
+    test('nudges today only when nothing is done yet', () {
+      final open = planNotifications(
+        tasks: const [],
+        tags: const [],
+        settings: const Settings(remindersOn: false),
+        now: now,
+      );
+      expect(open.first.at, DateTime(2026, 10, 3, 20));
+
+      final done = planNotifications(
+        tasks: [_done(ago(0))],
+        tags: const [],
+        settings: const Settings(remindersOn: false),
+        now: now,
+      );
+      expect(done.first.at, DateTime(2026, 10, 4, 20));
+      expect(done.first.title, 'Keep your 1-day streak');
+    });
+  });
+
+  group('milestoneReached', () {
+    test('fires when a milestone is crossed', () {
+      expect(milestoneReached(6, 7), 7);
+      expect(milestoneReached(29, 30), 30);
+    });
+
+    test('does not fire between or on repeat', () {
+      expect(milestoneReached(7, 8), isNull);
+      expect(milestoneReached(7, 7), isNull);
+      expect(milestoneReached(0, 1), isNull);
+    });
+  });
+
+  group('layoutTimeline', () {
+    TimelineItem item(int start, int end) =>
+        TimelineItem(start: start, end: end);
+
+    test('separate items keep the full width', () {
+      final items = [item(540, 600), item(600, 660)];
+      layoutTimeline(items);
+      expect(items.every((i) => i.columns == 1 && i.column == 0), isTrue);
+    });
+
+    test('overlapping items sit side by side', () {
+      final items = [item(540, 600), item(570, 630)];
+      layoutTimeline(items);
+      expect(items.map((i) => i.column).toSet(), {0, 1});
+      expect(items.every((i) => i.columns == 2), isTrue);
+    });
+
+    test('a later item reuses a freed column', () {
+      // a and b overlap; c overlaps b only, so it takes a's column.
+      final items = [item(540, 600), item(570, 660), item(610, 650)];
+      layoutTimeline(items);
+      expect(items[2].column, 0);
+      expect(items.every((i) => i.columns == 2), isTrue);
     });
   });
 }

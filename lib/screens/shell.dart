@@ -47,13 +47,13 @@ class ShellState extends State<Shell> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: DfSpace.s4),
             child: SizedBox(
-              height: 72,
+              height: 76,
               child: Stack(
                 alignment: Alignment.center,
                 clipBehavior: Clip.none,
                 children: [
                   Container(
-                    height: 64,
+                    height: 68,
                     decoration: BoxDecoration(
                       color: c.surface,
                       borderRadius: BorderRadius.circular(32),
@@ -64,7 +64,7 @@ class ShellState extends State<Shell> {
                       children: [
                         _Tab(LucideIcons.house, 'Home', 0, _index, goTo),
                         _Tab(LucideIcons.calendar, 'Calendar', 1, _index, goTo),
-                        const SizedBox(width: 64),
+                        const SizedBox(width: 60),
                         _Tab(LucideIcons.listChecks, 'Tasks', 2, _index, goTo),
                         _Tab(LucideIcons.chartColumn, 'Analytics', 3, _index,
                             goTo),
@@ -80,8 +80,8 @@ class ShellState extends State<Shell> {
                         showAddTask(context);
                       },
                       child: Container(
-                        width: 56,
-                        height: 56,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
                           color: c.primary,
                           shape: BoxShape.circle,

@@ -24,12 +24,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>DayFlow shows your meetings and appointments next to your tasks. It never changes your calendar.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>DayFlow shows your meetings and appointments next to your tasks. It never changes your calendar.</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

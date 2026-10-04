@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import '../models/models.dart';
 import 'device_calendar.dart';
+import 'notifications.dart';
 import 'streak.dart';
 
 /// Holds the signed-in user's tasks, tags, settings and calendar events, and
@@ -13,19 +14,24 @@ import 'streak.dart';
 class AppState extends ChangeNotifier {
   AppState(this.user) {
     _taskSub = _tasksRef.snapshots().listen((s) {
-      tasks = s.docs.map(Task.fromDoc).toList();
+      // Tasks marked "won't do" stay stored but leave every list and count.
+      tasks = s.docs
+          .map(Task.fromDoc)
+          .where((t) => t.droppedAt == null)
+          .toList();
       loaded = true;
       error = null;
-      notifyListeners();
+      _changed();
     }, onError: _onError);
     _tagSub = _tagsRef.orderBy('order').snapshots().listen((s) {
       tags = s.docs.map(Tag.fromDoc).toList();
       if (tags.isEmpty && !_seeded) _seedTags();
-      notifyListeners();
+      _changed();
     }, onError: _onError);
     _settingsSub = _userRef.snapshots().listen((s) {
       settings = Settings.fromMap(s.data());
-      notifyListeners();
+      settingsLoaded = true;
+      _changed();
     }, onError: _onError);
     refreshCalendar();
   }
@@ -35,10 +41,12 @@ class AppState extends ChangeNotifier {
   List<Tag> tags = [];
   Settings settings = const Settings();
   bool loaded = false;
+  bool settingsLoaded = false;
   String? error;
 
   CalendarAccess calendarAccess = CalendarAccess.notDetermined;
-  List<CalEvent> events = [];
+  List<DeviceCal> calendars = [];
+  List<CalEvent> _allEvents = [];
 
   late final StreamSubscription _taskSub, _tagSub, _settingsSub;
   bool _seeded = false;
@@ -49,6 +57,17 @@ class AppState extends ChangeNotifier {
       _userRef.collection('tasks');
   CollectionReference<Map<String, dynamic>> get _tagsRef =>
       _userRef.collection('tags');
+
+  void _changed() {
+    notifyListeners();
+    syncNotifications();
+  }
+
+  /// Brings the device's pending notifications in line with the data.
+  Future<void> syncNotifications() async {
+    if (!loaded || !settingsLoaded) return;
+    await Notifications.sync(tasks: tasks, tags: tags, settings: settings);
+  }
 
   void _onError(Object e) {
     error = e is FirebaseException && e.code == 'permission-denied'
@@ -100,12 +119,23 @@ class AppState extends ChangeNotifier {
 
   static int _byDue(Task a, Task b) {
     final ad = a.due, bd = b.due;
-    if (ad == null && bd == null) return a.createdAt.compareTo(b.createdAt);
+    if (ad == null && bd == null) {
+      if (a.sort != null || b.sort != null) {
+        final c = (a.sort ?? 1 << 30).compareTo(b.sort ?? 1 << 30);
+        if (c != 0) return c;
+      }
+      return a.createdAt.compareTo(b.createdAt);
+    }
     if (ad == null) return 1;
     if (bd == null) return -1;
     // Untimed tasks sort after timed ones on the same day.
     final day = dateOnly(ad).compareTo(dateOnly(bd));
     if (day != 0) return day;
+    // A hand-set order within the day wins over the clock.
+    if (a.sort != null || b.sort != null) {
+      final c = (a.sort ?? 1 << 30).compareTo(b.sort ?? 1 << 30);
+      if (c != 0) return c;
+    }
     if (a.hasTime != b.hasTime) return a.hasTime ? -1 : 1;
     final c = ad.compareTo(bd);
     return c != 0 ? c : a.createdAt.compareTo(b.createdAt);
@@ -171,6 +201,7 @@ class AppState extends ChangeNotifier {
     bool hasTime = false,
     Repeat repeat = Repeat.none,
     bool remind = false,
+    int remindMinutes = 0,
   }) async {
     final ref = _tasksRef.doc();
     final task = Task(
@@ -182,6 +213,7 @@ class AppState extends ChangeNotifier {
       hasTime: hasTime,
       repeat: repeat,
       remind: remind,
+      remindMinutes: remindMinutes,
       createdAt: DateTime.now(),
     );
     await _guard(() => ref.set(task.toMap()));
@@ -195,6 +227,21 @@ class AppState extends ChangeNotifier {
       _guard(() => _tasksRef.doc(task.id).delete());
 
   Future<void> restoreTask(Task task) => updateTask(task);
+
+  /// Saves the order of [ordered] as dragged in the Tasks list.
+  Future<void> reorder(List<Task> ordered) {
+    final batch = FirebaseFirestore.instance.batch();
+    for (var i = 0; i < ordered.length; i++) {
+      if (ordered[i].sort != i) {
+        batch.update(_tasksRef.doc(ordered[i].id), {'sort': i});
+      }
+    }
+    return _guard(batch.commit);
+  }
+
+  /// Marks a task "won't do": it disappears without counting against you.
+  Future<void> dropTask(Task task) =>
+      updateTask(task.copyWith(droppedAt: () => DateTime.now()));
 
   static DateTime _nextOccurrence(DateTime due, Repeat r) {
     DateTime plus(int days) => DateTime(
@@ -237,6 +284,7 @@ class AppState extends ChangeNotifier {
         hasTime: task.hasTime,
         repeat: task.repeat,
         remind: task.remind,
+        remindMinutes: task.remindMinutes,
       );
     }
     return null;
@@ -275,10 +323,13 @@ class AppState extends ChangeNotifier {
   Future<void> _seedTags() async {
     _seeded = true;
     const names = ['Work', 'School', 'Personal', 'Health'];
+    const icons = ['briefcase', 'graduationCap', 'user', 'heart'];
     final batch = FirebaseFirestore.instance.batch();
     for (var i = 0; i < names.length; i++) {
-      batch.set(_tagsRef.doc(names[i].toLowerCase()),
-          Tag(id: '', name: names[i], color: i, order: i).toMap());
+      batch.set(
+          _tagsRef.doc(names[i].toLowerCase()),
+          Tag(id: '', name: names[i], color: i, order: i, icon: icons[i])
+              .toMap());
     }
     try {
       await batch.commit();
@@ -287,14 +338,22 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> addTag(String name, int color) => _guard(() => _tagsRef.add(
-      Tag(id: '', name: name.trim(), color: color, order: tags.length)
-          .toMap()));
+  /// Creates a tag and returns its id.
+  Future<String> addTag(String name, int color, {String icon = 'tag'}) async {
+    final ref = _tagsRef.doc();
+    final order =
+        tags.isEmpty ? 0 : tags.map((t) => t.order).reduce((a, b) => a > b ? a : b) + 1;
+    await _guard(() => ref.set(
+        Tag(id: ref.id, name: name.trim(), color: color, order: order, icon: icon)
+            .toMap()));
+    return ref.id;
+  }
 
-  Future<void> updateTag(Tag tag, {String? name, int? color}) =>
+  Future<void> updateTag(Tag tag, {String? name, int? color, String? icon}) =>
       _guard(() => _tagsRef.doc(tag.id).update({
             if (name != null) 'name': name.trim(),
             if (color != null) 'color': color,
+            if (icon != null) 'icon': icon,
           }));
 
   Future<void> deleteTag(Tag tag) => _guard(() => _tagsRef.doc(tag.id).delete());
@@ -311,12 +370,14 @@ class AppState extends ChangeNotifier {
     calendarAccess = await DeviceCalendar.status();
     if (calendarAccess == CalendarAccess.granted) {
       final now = DateTime.now();
-      events = await DeviceCalendar.events(
+      calendars = await DeviceCalendar.calendars();
+      _allEvents = await DeviceCalendar.events(
         DateTime(now.year, now.month - 2, 1),
         DateTime(now.year, now.month + 3, 1),
       );
     } else {
-      events = [];
+      calendars = [];
+      _allEvents = [];
     }
     notifyListeners();
   }
@@ -325,6 +386,18 @@ class AppState extends ChangeNotifier {
     calendarAccess = await DeviceCalendar.request();
     await refreshCalendar();
   }
+
+  /// Events from the calendars the user has left switched on.
+  List<CalEvent> get events {
+    final hidden = settings.hiddenCalendars;
+    if (hidden.isEmpty) return _allEvents;
+    return _allEvents.where((e) => !hidden.contains(e.calendarId)).toList();
+  }
+
+  /// How many of the phone's calendars are switched on.
+  int get shownCalendarCount => calendars
+      .where((cal) => !settings.hiddenCalendars.contains(cal.id))
+      .length;
 
   bool get showEvents =>
       settings.showCalendar && calendarAccess == CalendarAccess.granted;

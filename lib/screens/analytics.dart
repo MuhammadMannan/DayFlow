@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'shell.dart';
+import 'task_detail.dart';
 
 enum _Range { week, month, all }
 
@@ -61,18 +62,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final prevDone = prevFrom == null
         ? 0
         : state.tasks
-            .where((t) =>
-                t.completedAt != null &&
-                !t.completedAt!.isBefore(prevFrom) &&
-                t.completedAt!.isBefore(from!))
-            .length;
+              .where(
+                (t) =>
+                    t.completedAt != null &&
+                    !t.completedAt!.isBefore(prevFrom) &&
+                    t.completedAt!.isBefore(from!),
+              )
+              .length;
 
     // Completion rate: of tasks due in the range up to today, how many are done.
     final planned = state.tasks
-        .where((t) =>
-            t.due != null &&
-            inRange(t.due!) &&
-            !dateOnly(t.due!).isAfter(today))
+        .where(
+          (t) =>
+              t.due != null &&
+              inRange(t.due!) &&
+              !dateOnly(t.due!).isAfter(today),
+        )
         .toList();
     final rate = planned.isEmpty
         ? null
@@ -89,7 +94,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final busiest = maxWd == 0
         ? '–'
         : DateFormat('EEEE')
-            .format(DateTime(2024, 1, 1 + perWeekday.indexOf(maxWd)));
+              .format(DateTime(2024, 1, 1 + perWeekday.indexOf(maxWd)));
     final avg = activeDays.isEmpty ? 0.0 : done.length / activeDays.length;
 
     // By tag.
@@ -114,13 +119,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       bottom: false,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            DfSpace.s5, DfSpace.s3, DfSpace.s5, kTabBarClearance),
+          DfSpace.s5,
+          DfSpace.s3,
+          DfSpace.s5,
+          kTabBarClearance,
+        ),
         children: [
           Row(
             children: [
               Expanded(
-                child:
-                    Text('Analytics', style: DfText.h1.copyWith(color: c.text)),
+                child: Text(
+                  'Analytics',
+                  style: DfText.h1.copyWith(color: c.text),
+                ),
               ),
               DfSegmented<_Range>(
                 values: const [_Range.week, _Range.month, _Range.all],
@@ -159,7 +170,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: c.primarySoft,
-              borderRadius: BorderRadius.circular(DfRadius.md),
+              borderRadius: BorderRadius.circular(DfRadius.field),
             ),
             child: Row(
               children: [
@@ -203,12 +214,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             children: [
               Expanded(
-                  child: _StatCard(label: 'Busiest day', value: busiest)),
+                child: _StatCard(label: 'Busiest day', value: busiest),
+              ),
               const SizedBox(width: DfSpace.s3),
               Expanded(
                 child: _StatCard(
-                    label: 'Average per active day',
-                    value: avg == 0 ? '–' : avg.toStringAsFixed(1)),
+                  label: 'Average per day',
+                  value: avg == 0 ? '–' : avg.toStringAsFixed(1),
+                ),
               ),
             ],
           ),
@@ -246,7 +259,7 @@ class _StreakCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -254,7 +267,9 @@ class _StreakCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-                color: iconBg, borderRadius: BorderRadius.circular(10)),
+              color: iconBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Icon(icon, size: 20, color: iconColor),
           ),
           const SizedBox(height: DfSpace.s3),
@@ -262,11 +277,12 @@ class _StreakCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text('$value',
-                  style: DfText.numericLarge.copyWith(color: c.text)),
+              Text('$value', style: DfText.display.copyWith(color: c.text)),
               const SizedBox(width: 6),
-              Text(value == 1 ? 'day' : 'days',
-                  style: DfText.bodyStrong.copyWith(color: c.textSecondary)),
+              Text(
+                value == 1 ? 'day' : 'days',
+                style: DfText.bodyStrong.copyWith(color: c.textSecondary),
+              ),
             ],
           ),
           const SizedBox(height: 2),
@@ -297,10 +313,12 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: DfText.caption.copyWith(color: c.textMuted),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
+          Text(
+            label,
+            style: DfText.caption.copyWith(color: c.textMuted),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -320,10 +338,12 @@ class _StatCard extends StatelessWidget {
                   const SizedBox(width: 2),
                 ],
                 Expanded(
-                  child: Text(note,
-                      style: DfText.caption.copyWith(color: c.textSecondary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    note,
+                    style: DfText.caption.copyWith(color: c.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -363,104 +383,141 @@ class _Heatmap extends StatelessWidget {
     const dayLabels = ['M', '', 'W', '', 'F', '', 'S'];
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Expanded(
-                child: Text('Last $_weeks weeks',
-                    style: DfText.h3.copyWith(color: c.text)),
+                child: Text(
+                  'Last $_weeks weeks',
+                  style: DfText.h3.copyWith(color: c.text),
+                ),
               ),
-              Text('$total completed',
-                  style: DfText.small.copyWith(color: c.textMuted)),
+              Text(
+                '$total completed',
+                style: DfText.small.copyWith(color: c.textMuted),
+              ),
             ],
           ),
           const SizedBox(height: DfSpace.s3),
-          LayoutBuilder(builder: (context, box) {
-            const labelW = 18.0;
-            const gap = 3.0;
-            final cell = (box.maxWidth - labelW - gap * (_weeks - 1)) / _weeks;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Month labels above the first week of each month.
-                Padding(
-                  padding: const EdgeInsets.only(left: labelW),
-                  child: SizedBox(
-                    height: 16,
-                    child: Stack(
-                      children: [
-                        for (var w = 0; w < _weeks; w++)
-                          if (w == 0 ||
-                              start.add(Duration(days: w * 7)).month !=
-                                  start.add(Duration(days: (w - 1) * 7)).month)
-                            Positioned(
-                              left: w * (cell + gap),
-                              child: Text(
-                                DateFormat('MMM').format(
-                                    start.add(Duration(days: w * 7))),
-                                style: DfText.overline.copyWith(
+          LayoutBuilder(
+            builder: (context, box) {
+              const labelW = 18.0;
+              const gap = 3.0;
+              final cell =
+                  (box.maxWidth - labelW - gap * (_weeks - 1)) / _weeks;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Month labels above the first week of each month.
+                  Padding(
+                    padding: const EdgeInsets.only(left: labelW),
+                    child: SizedBox(
+                      height: 16,
+                      child: Stack(
+                        children: [
+                          for (var w = 0; w < _weeks; w++)
+                            if (w == 0 ||
+                                start.add(Duration(days: w * 7)).month !=
+                                    start
+                                        .add(Duration(days: (w - 1) * 7))
+                                        .month)
+                              Positioned(
+                                left: w * (cell + gap),
+                                child: Text(
+                                  DateFormat('MMM')
+                                      .format(start.add(Duration(days: w * 7))),
+                                  style: DfText.overline.copyWith(
                                     color: c.textMuted,
                                     letterSpacing: 0,
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 10),
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  for (var d = 0; d < 7; d++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: gap),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: labelW,
+                            child: Text(
+                              dayLabels[d],
+                              style: DfText.overline.copyWith(
+                                color: c.textMuted,
+                                letterSpacing: 0,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 10,
                               ),
                             ),
-                      ],
+                          ),
+                          for (var w = 0; w < _weeks; w++)
+                            Builder(
+                              builder: (context) {
+                                final day = DateTime(
+                                  start.year,
+                                  start.month,
+                                  start.day + w * 7 + d,
+                                );
+                                final future = day.isAfter(today);
+                                final n = byDay[day] ?? 0;
+                                return GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: future || n == 0
+                                      ? null
+                                      : () => _showCompleted(
+                                          context,
+                                          DateFormat('EEEE, d MMMM')
+                                              .format(day),
+                                          day,
+                                          DateTime(
+                                            day.year,
+                                            day.month,
+                                            day.day + 1,
+                                          ),
+                                        ),
+                                  child: Container(
+                                    width: cell,
+                                    height: cell,
+                                    margin: EdgeInsets.only(
+                                      right: w == _weeks - 1 ? 0 : gap,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: future
+                                          ? Colors.transparent
+                                          : c.heat[level(n)],
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: day == today
+                                          ? Border.all(
+                                              color: c.text,
+                                              width: 1.5,
+                                            )
+                                          : future
+                                          ? Border.all(color: c.border)
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                for (var d = 0; d < 7; d++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: gap),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: labelW,
-                          child: Text(dayLabels[d],
-                              style: DfText.overline.copyWith(
-                                  color: c.textMuted,
-                                  letterSpacing: 0,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 10)),
-                        ),
-                        for (var w = 0; w < _weeks; w++)
-                          Builder(builder: (context) {
-                            final day = DateTime(start.year, start.month,
-                                start.day + w * 7 + d);
-                            final future = day.isAfter(today);
-                            final n = byDay[day] ?? 0;
-                            return Container(
-                              width: cell,
-                              height: cell,
-                              margin: EdgeInsets.only(
-                                  right: w == _weeks - 1 ? 0 : gap),
-                              decoration: BoxDecoration(
-                                color: future
-                                    ? Colors.transparent
-                                    : c.heat[level(n)],
-                                borderRadius: BorderRadius.circular(4),
-                                border: day == today
-                                    ? Border.all(color: c.text, width: 1.5)
-                                    : future
-                                        ? Border.all(color: c.border)
-                                        : null,
-                              ),
-                            );
-                          }),
-                      ],
-                    ),
-                  ),
-              ],
-            );
-          }),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: DfSpace.s2),
           Row(
             children: [
-              Text('Less',
-                  style: DfText.caption.copyWith(color: c.textMuted)),
+              Text('Less', style: DfText.caption.copyWith(color: c.textMuted)),
               const SizedBox(width: 6),
               for (final color in c.heat)
                 Container(
@@ -468,11 +525,12 @@ class _Heatmap extends StatelessWidget {
                   height: 12,
                   margin: const EdgeInsets.only(right: 3),
                   decoration: BoxDecoration(
-                      color: color, borderRadius: BorderRadius.circular(3)),
+                    color: color,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
               const SizedBox(width: 3),
-              Text('More',
-                  style: DfText.caption.copyWith(color: c.textMuted)),
+              Text('More', style: DfText.caption.copyWith(color: c.textMuted)),
             ],
           ),
         ],
@@ -507,18 +565,24 @@ class _ByTag extends StatelessWidget {
     }
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Expanded(
-                child: Text('Completed by tag',
-                    style: DfText.h3.copyWith(color: c.text)),
+                child: Text(
+                  'Completed by tag',
+                  style: DfText.h3.copyWith(color: c.text),
+                ),
               ),
-              Text(rangeLabel[0].toUpperCase() + rangeLabel.substring(1),
-                  style: DfText.small.copyWith(color: c.textMuted)),
+              Text(
+                rangeLabel == 'this month'
+                    ? DateFormat('MMMM').format(DateTime.now())
+                    : rangeLabel[0].toUpperCase() + rangeLabel.substring(1),
+                style: DfText.small.copyWith(color: c.textMuted),
+              ),
             ],
           ),
           const SizedBox(height: DfSpace.s3),
@@ -539,7 +603,8 @@ class _ByTag extends StatelessWidget {
                       child: Container(
                         height: 12,
                         margin: EdgeInsets.only(
-                            right: i == rows.length - 1 ? 0 : 2),
+                          right: i == rows.length - 1 ? 0 : 2,
+                        ),
                         decoration: BoxDecoration(
                           color: rows[i].$2,
                           borderRadius: BorderRadius.circular(3),
@@ -558,16 +623,22 @@ class _ByTag extends StatelessWidget {
                     Container(
                       width: 10,
                       height: 10,
-                      decoration:
-                          BoxDecoration(color: color, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(name,
-                          style: DfText.body.copyWith(color: c.text)),
+                      child: Text(
+                        name,
+                        style: DfText.body.copyWith(color: c.text),
+                      ),
                     ),
-                    Text('$count',
-                        style: DfText.bodyStrong.copyWith(color: c.text)),
+                    Text(
+                      '$count',
+                      style: DfText.bodyStrong.copyWith(color: c.text),
+                    ),
                     SizedBox(
                       width: 48,
                       child: Text(
@@ -605,19 +676,21 @@ class _WeeklyBars extends StatelessWidget {
       for (final s in starts)
         [
           for (var d = 0; d < 7; d++)
-            byDay[DateTime(s.year, s.month, s.day + d)] ?? 0
+            byDay[DateTime(s.year, s.month, s.day + d)] ?? 0,
         ].reduce((a, b) => a + b),
     ];
     final peak = totals.reduce(math.max);
     final best = totals.indexOf(peak);
 
     return DfCard(
-      radius: DfRadius.xl,
+      radius: DfRadius.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tasks completed per week',
-              style: DfText.h3.copyWith(color: c.text)),
+          Text(
+            'Tasks completed per week',
+            style: DfText.h3.copyWith(color: c.text),
+          ),
           const SizedBox(height: DfSpace.s4),
           SizedBox(
             height: 150,
@@ -626,8 +699,22 @@ class _WeeklyBars extends StatelessWidget {
               children: [
                 for (var i = 0; i < _weeks; i++)
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: totals[i] == 0
+                          ? null
+                          : () => _showCompleted(
+                              context,
+                              i == _weeks - 1
+                                  ? 'This week'
+                                  : 'Week of ${DateFormat('d MMMM').format(starts[i])}',
+                              starts[i],
+                              DateTime(
+                                starts[i].year,
+                                starts[i].month,
+                                starts[i].day + 7,
+                              ),
+                            ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -635,11 +722,15 @@ class _WeeklyBars extends StatelessWidget {
                           if (peak > 0 && (i == best || i == _weeks - 1))
                             Padding(
                               padding: const EdgeInsets.only(bottom: 4),
-                              child: Text('${totals[i]}',
-                                  style: DfText.caption
-                                      .copyWith(color: c.textSecondary)),
+                              child: Text(
+                                '${totals[i]}',
+                                style: DfText.caption.copyWith(
+                                  color: c.textSecondary,
+                                ),
+                              ),
                             ),
                           Container(
+                            width: 22,
                             height: peak == 0
                                 ? 4
                                 : math.max(4, 118 * totals[i] / peak),
@@ -647,10 +738,11 @@ class _WeeklyBars extends StatelessWidget {
                               color: totals[i] == 0
                                   ? c.surfaceMuted
                                   : i == _weeks - 1
-                                      ? c.heat[2]
-                                      : c.primary,
+                                  ? c.heat[2]
+                                  : c.primary,
                               borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(4)),
+                                top: Radius.circular(4),
+                              ),
                             ),
                           ),
                         ],
@@ -670,30 +762,128 @@ class _WeeklyBars extends StatelessWidget {
                     i == _weeks - 1
                         ? 'This wk'
                         : i.isEven
-                            ? DateFormat('MMM d').format(starts[i])
-                            : '',
+                        ? DateFormat('MMM d').format(starts[i])
+                        : '',
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     softWrap: false,
                     overflow: TextOverflow.visible,
                     style: DfText.overline.copyWith(
-                        color: c.textMuted,
-                        letterSpacing: 0,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 10),
+                      color: c.textMuted,
+                      letterSpacing: 0,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
             ],
           ),
           const SizedBox(height: DfSpace.s3),
           Text(
-            peak == 0
-                ? 'Complete tasks to see your weekly trend here.'
-                : 'This week is still in progress.',
+            peak == 0 ? 'Complete tasks to see your weekly trend here.' : 'This week is still in progress. Tap any bar for that week’s tasks.',
             style: DfText.small.copyWith(color: c.textMuted),
           ),
         ],
       ),
     );
   }
+}
+
+/// Lists the tasks completed between [from] and [to].
+void _showCompleted(
+  BuildContext context,
+  String title,
+  DateTime from,
+  DateTime to,
+) {
+  final state = AppScope.read(context);
+  final c = context.df;
+  final tasks =
+      state.tasks
+          .where(
+            (t) =>
+                t.completedAt != null &&
+                !t.completedAt!.isBefore(from) &&
+                t.completedAt!.isBefore(to),
+          )
+          .toList()
+        ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) => AppScope(
+      state: state,
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6,
+        maxChildSize: 0.92,
+        builder: (ctx, scroll) => ListView(
+          controller: scroll,
+          padding: const EdgeInsets.fromLTRB(
+            DfSpace.s5,
+            DfSpace.s3,
+            DfSpace.s5,
+            DfSpace.s6,
+          ),
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: c.borderStrong,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+            const SizedBox(height: DfSpace.s4),
+            Text(title, style: DfText.h2.copyWith(color: c.text)),
+            Text(
+              '${tasks.length} ${tasks.length == 1 ? 'task' : 'tasks'} completed',
+              style: DfText.small.copyWith(color: c.textMuted),
+            ),
+            const SizedBox(height: DfSpace.s4),
+            for (final t in tasks) ...[
+              DfCard(
+                color: c.surfaceMuted,
+                radius: DfRadius.row,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  openTaskDetail(context, t);
+                },
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.check, size: 18, color: c.success),
+                    const SizedBox(width: DfSpace.s3),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.title,
+                            style: DfText.bodyStrong.copyWith(color: c.text),
+                          ),
+                          Text(
+                            '${DateFormat('EEE d MMM').format(t.completedAt!)} · ${formatTime(t.completedAt!)}',
+                            style: DfText.caption.copyWith(color: c.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (state.tagFor(t) != null) TagChip(tag: state.tagFor(t)!),
+                  ],
+                ),
+              ),
+              const SizedBox(height: DfSpace.s2),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
 }

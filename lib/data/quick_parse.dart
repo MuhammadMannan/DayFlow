@@ -7,6 +7,7 @@ class QuickParse {
     this.hour,
     this.minute,
     this.matched = '',
+    this.ranges = const [],
   });
 
   /// The text with the date and time phrases removed.
@@ -18,11 +19,15 @@ class QuickParse {
   /// The phrase that was recognised, for the "We picked up ..." hint.
   final String matched;
 
+  /// Where the recognised phrases sit in the text that was typed, as
+  /// (start, end) pairs, so the input can highlight them.
+  final List<(int, int)> ranges;
+
   bool get hasTime => hour != null;
 
   DateTime? get due {
-    if (date == null && hour == null) return null;
-    final d = date ?? dateOnly(DateTime.now());
+    final d = date;
+    if (d == null) return null;
     return DateTime(d.year, d.month, d.day, hour ?? 0, minute ?? 0);
   }
 }
@@ -53,6 +58,9 @@ QuickParse parseQuick(String input, {DateTime? now}) {
   DateTime? date;
   int? hour, minute;
   final matched = <String>[];
+  final ranges = <(int, int)>[];
+  // Start and length of the date phrase once it is cut out of [text].
+  var cutAt = -1, cutLength = 0;
 
   final dm = _dateRe.firstMatch(text);
   if (dm != null) {
@@ -71,6 +79,9 @@ QuickParse parseQuick(String input, {DateTime? now}) {
     }
     if (date != null) {
       matched.add(raw);
+      ranges.add((dm.start, dm.end));
+      cutAt = dm.start;
+      cutLength = dm.end - dm.start;
       text = text.replaceRange(dm.start, dm.end, '');
       if (word == 'tonight') hour = 20;
     }
@@ -93,6 +104,9 @@ QuickParse parseQuick(String input, {DateTime? now}) {
     }
     if (hour < 24 && minute < 60) {
       matched.add(tm.group(0)!.trim());
+      // Map back to positions in the original input.
+      final shift = cutAt >= 0 && tm.start >= cutAt ? cutLength : 0;
+      ranges.add((tm.start + shift, tm.end + shift));
       text = text.replaceRange(tm.start, tm.end, '');
     } else {
       hour = null;
@@ -111,9 +125,11 @@ QuickParse parseQuick(String input, {DateTime? now}) {
 
   return QuickParse(
     title: title,
-    date: date,
+    // A time on its own means today.
+    date: date ?? (hour != null ? today : null),
     hour: hour,
     minute: minute,
     matched: matched.join(' '),
+    ranges: ranges,
   );
 }

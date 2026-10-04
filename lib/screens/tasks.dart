@@ -8,6 +8,9 @@ import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'add_task.dart';
+import 'profile.dart';
+import 'reschedule.dart';
+import 'tags.dart';
 import 'shell.dart';
 import 'task_detail.dart';
 
@@ -53,6 +56,51 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
+  void _showMore() {
+    final c = context.df;
+    final state = AppScope.read(context);
+    const sections = ['Overdue', 'Today', 'Upcoming', 'Someday', 'Completed'];
+    Widget item(IconData icon, String label, VoidCallback onTap) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(icon, size: 20, color: c.text),
+          title: Text(label, style: DfText.body.copyWith(color: c.text)),
+          onTap: () {
+            Navigator.pop(context);
+            onTap();
+          },
+        );
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: DfSpace.s5, vertical: DfSpace.s3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              item(LucideIcons.chevronDown, 'Expand all sections',
+                  () => setState(_collapsed.clear)),
+              item(LucideIcons.chevronUp, 'Collapse all sections',
+                  () => setState(() => _collapsed.addAll(sections))),
+              item(
+                LucideIcons.tag,
+                'Manage tags',
+                () => Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        AppScope(state: state, child: const TagsScreen()),
+                  ),
+                ),
+              ),
+              item(LucideIcons.user, 'Profile and settings',
+                  () => openProfile(context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   bool _matches(Task t) {
     if (_tagFilter != null && t.tagId != _tagFilter) return false;
     final q = _search.text.trim().toLowerCase();
@@ -95,6 +143,12 @@ class _TasksScreenState extends State<TasksScreen> {
                   if (!_searching) _search.clear();
                 }),
               ),
+              const SizedBox(width: 8),
+              DfIconButton(
+                icon: LucideIcons.ellipsis,
+                semanticLabel: 'More',
+                onPressed: _showMore,
+              ),
             ],
           ),
           if (_searching) ...[
@@ -132,10 +186,11 @@ class _TasksScreenState extends State<TasksScreen> {
           Container(
             decoration: BoxDecoration(
               color: c.surface,
-              borderRadius: BorderRadius.circular(DfRadius.lg),
+              borderRadius: BorderRadius.circular(DfRadius.row),
               border: Border.all(color: c.primary, width: 1.5),
             ),
-            padding: const EdgeInsets.only(left: 14, right: 8),
+            constraints: const BoxConstraints(minHeight: 63),
+            padding: const EdgeInsets.only(left: 16, right: 8),
             child: Row(
               children: [
                 Icon(LucideIcons.plus, size: 20, color: c.primary),
@@ -145,11 +200,16 @@ class _TasksScreenState extends State<TasksScreen> {
                     controller: _quick,
                     onSubmitted: (_) => _quickAdd(),
                     textInputAction: TextInputAction.done,
+                    keyboardType: TextInputType.text,
+                    minLines: 1,
+                    maxLines: 2,
                     textCapitalization: TextCapitalization.sentences,
                     style: DfText.body.copyWith(color: c.text),
                     cursorColor: c.primary,
                     decoration: InputDecoration(
                       border: InputBorder.none,
+                      isDense: true,
+                      hintMaxLines: 2,
                       hintText: 'Add a task… e.g. “Call mom tomorrow 6pm”',
                       hintStyle: DfText.body.copyWith(color: c.textMuted),
                     ),
@@ -160,7 +220,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   label: 'Add task',
                   child: Material(
                     color: c.primarySoft,
-                    borderRadius: BorderRadius.circular(DfRadius.sm),
+                    borderRadius: BorderRadius.circular(DfRadius.md),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: _quickAdd,
@@ -204,25 +264,26 @@ class _TasksScreenState extends State<TasksScreen> {
             )
           else ...[
             ..._section('Overdue', overdue, color: c.danger),
-            ..._section('Today', today),
+            ..._section('Today', today, reorderable: true),
             ..._section('Upcoming', upcoming, groupByDay: true),
-            ..._section('Someday', someday),
+            ..._section('Someday', someday, reorderable: true),
             ..._section('Completed', completed, muted: true, showDate: true),
             const SizedBox(height: DfSpace.s4),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: c.primarySoft,
-                borderRadius: BorderRadius.circular(DfRadius.md),
+                borderRadius: BorderRadius.circular(DfRadius.field),
               ),
               child: Row(
                 children: [
-                  Icon(LucideIcons.sparkle, size: 16, color: c.primary),
-                  const SizedBox(width: 10),
+                  Icon(LucideIcons.sparkle, size: 16, color: c.primaryStrong),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Swipe right to complete, left to delete. Tap a task to edit or reschedule.',
-                      style: DfText.small.copyWith(color: c.primary),
+                      'Swipe right to complete, left to reschedule. Hold and drag to reorder.',
+                      style: DfText.caption.copyWith(color: c.primaryStrong),
                     ),
                   ),
                 ],
@@ -241,13 +302,50 @@ class _TasksScreenState extends State<TasksScreen> {
     bool groupByDay = false,
     bool muted = false,
     bool showDate = false,
+    bool reorderable = false,
   }) {
     if (tasks.isEmpty) return const [];
     final c = context.df;
     final collapsed = _collapsed.contains(title);
     final today = dateOnly(DateTime.now());
     final rows = <Widget>[];
-    if (!collapsed) {
+    if (!collapsed && reorderable && tasks.length > 1) {
+      // Hold and drag to reorder within the section.
+      rows.add(ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: tasks.length,
+        proxyDecorator: (child, index, animation) =>
+            Material(color: Colors.transparent, child: child),
+        onReorder: (from, to) async {
+          final ordered = [...tasks];
+          final moved = ordered.removeAt(from);
+          ordered.insert(to > from ? to - 1 : to, moved);
+          try {
+            await AppScope.read(context).reorder(ordered);
+          } catch (_) {
+            if (mounted) {
+              showMessage(context, 'Could not save. Check your connection.');
+            }
+          }
+        },
+        itemBuilder: (context, i) {
+          final t = tasks[i];
+          return Padding(
+            key: ValueKey('row-${t.id}'),
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _Swipeable(
+              task: t,
+              child: TaskRow(
+                task: t,
+                onToggle: (v) => toggleTask(context, t, v),
+                onTap: () => openTaskDetail(context, t),
+              ),
+            ),
+          );
+        },
+      ));
+    } else if (!collapsed) {
       DateTime? lastDay;
       for (final t in tasks) {
         if (groupByDay && t.dueDay != lastDay) {
@@ -271,7 +369,7 @@ class _TasksScreenState extends State<TasksScreen> {
             onTap: () => openTaskDetail(context, t),
           ),
         ));
-        rows.add(const SizedBox(height: DfSpace.s2));
+        rows.add(const SizedBox(height: 10));
       }
     }
     return [
@@ -355,36 +453,39 @@ class _Swipeable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.df;
-    Widget bg(Color color, IconData icon, Alignment align) => Container(
-          alignment: align,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+    Widget bg(Color color, IconData icon, String label, bool leading) =>
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(DfRadius.lg),
+            borderRadius: BorderRadius.circular(DfRadius.row),
           ),
-          child: Icon(icon, color: Colors.white),
+          child: Row(
+            mainAxisAlignment:
+                leading ? MainAxisAlignment.start : MainAxisAlignment.end,
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(width: 8),
+              Text(label,
+                  style: DfText.smallStrong.copyWith(color: Colors.white)),
+            ],
+          ),
         );
     return Dismissible(
       key: ValueKey('swipe-${task.id}-${task.isDone}'),
-      background: bg(c.success, LucideIcons.check, Alignment.centerLeft),
+      background: bg(c.success, LucideIcons.check,
+          task.isDone ? 'Not done' : 'Done', true),
       secondaryBackground:
-          bg(c.danger, LucideIcons.trash2, Alignment.centerRight),
+          bg(c.primary, LucideIcons.calendar, 'Reschedule', false),
+      // A finished task has nothing to reschedule.
+      direction: task.isDone
+          ? DismissDirection.startToEnd
+          : DismissDirection.horizontal,
       confirmDismiss: (direction) async {
-        final state = AppScope.read(context);
         if (direction == DismissDirection.startToEnd) {
           await toggleTask(context, task, !task.isDone);
         } else {
-          try {
-            await state.deleteTask(task);
-            if (context.mounted) {
-              showUndo(context, 'Deleted “${task.title}”',
-                  () => state.restoreTask(task));
-            }
-          } catch (_) {
-            if (context.mounted) {
-              showMessage(context, 'Could not delete. Check your connection.');
-            }
-          }
+          await showReschedule(context, task);
         }
         // The list rebuilds from Firestore, so never remove the row locally.
         return false;
