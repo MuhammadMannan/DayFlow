@@ -21,8 +21,8 @@ class QuickParse {
   bool get hasTime => hour != null;
 
   DateTime? get due {
-    if (date == null && hour == null) return null;
-    final d = date ?? dateOnly(DateTime.now());
+    final d = date;
+    if (d == null) return null;
     return DateTime(d.year, d.month, d.day, hour ?? 0, minute ?? 0);
   }
 }
@@ -111,7 +111,8 @@ QuickParse parseQuick(String input, {DateTime? now}) {
 
   return QuickParse(
     title: title,
-    date: date,
+    // A time on its own means today.
+    date: date ?? (hour != null ? today : null),
     hour: hour,
     minute: minute,
     matched: matched.join(' '),
