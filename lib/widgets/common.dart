@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/app_state.dart';
+import '../data/streak.dart';
 import '../models/models.dart';
+import '../screens/milestone.dart';
 import '../theme/tokens.dart';
 
 /// White rounded card used across the app.
@@ -269,7 +272,7 @@ class Overline extends StatelessWidget {
       );
 }
 
-class DfCheckbox extends StatelessWidget {
+class DfCheckbox extends StatefulWidget {
   const DfCheckbox({
     super.key,
     required this.checked,
@@ -284,19 +287,87 @@ class DfCheckbox extends StatelessWidget {
   final Color? color;
 
   @override
+  State<DfCheckbox> createState() => _DfCheckboxState();
+}
+
+class _DfCheckboxState extends State<DfCheckbox>
+    with SingleTickerProviderStateMixin {
+  // Plays once when the box becomes checked: the circle pops and a ring
+  // expands and fades around it.
+  late final _burst = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+    value: 1,
+  );
+
+  @override
+  void didUpdateWidget(DfCheckbox old) {
+    super.didUpdateWidget(old);
+    if (widget.checked && !old.checked) {
+      if (MediaQuery.of(context).disableAnimations) {
+        _burst.value = 1;
+      } else {
+        _burst.forward(from: 0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _burst.dispose();
+    super.dispose();
+  }
+
+  void _tap() {
+    final next = !widget.checked;
+    if (next) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.selectionClick();
+    }
+    widget.onChanged!(next);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = context.df;
+    final checked = widget.checked;
     return Semantics(
       checked: checked,
       label: checked ? 'Mark as not done' : 'Mark as done',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: onChanged == null ? null : () => onChanged!(!checked),
+        onTap: widget.onChanged == null ? null : _tap,
         // 44pt tap target around a 24pt circle.
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Center(
+          child: AnimatedBuilder(
+            animation: _burst,
+            builder: (context, child) {
+              final t = _burst.value;
+              final scale = t >= 1
+                  ? 1.0
+                  : 1 + 0.28 * Curves.easeOutBack.transform(t) * (1 - t) * 2.2;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (t < 1)
+                    Opacity(
+                      opacity: (1 - t) * 0.5,
+                      child: Container(
+                        width: 24 + 20 * Curves.easeOut.transform(t),
+                        height: 24 + 20 * Curves.easeOut.transform(t),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: c.success, width: 2),
+                        ),
+                      ),
+                    ),
+                  Transform.scale(scale: scale, child: child),
+                ],
+              );
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
               width: 24,
@@ -307,9 +378,9 @@ class DfCheckbox extends StatelessWidget {
                 border: Border.all(
                   color: checked
                       ? c.success
-                      : danger
+                      : widget.danger
                           ? c.danger
-                          : (color ?? c.borderStrong),
+                          : (widget.color ?? c.borderStrong),
                   width: 2,
                 ),
               ),
@@ -390,11 +461,12 @@ class TaskRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    task.title,
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 220),
                     style: DfText.bodyStrong.copyWith(
                       color: task.isDone ? c.textMuted : c.text,
                     ),
+                    child: Text(task.title),
                   ),
                   const SizedBox(height: 6),
                   Wrap(
@@ -657,10 +729,26 @@ void showMessage(BuildContext context, String message) {
 /// Toggles a task and offers Undo. Shared by every list.
 Future<void> toggleTask(BuildContext context, Task task, bool done) async {
   final state = AppScope.read(context);
+  final before = state.streak.current;
   try {
     final nextId = await state.setDone(task, done);
     if (!context.mounted) return;
     if (done) {
+      // Work the streak out from this completion directly, since the
+      // Firestore snapshot may not have come back yet.
+      final now = DateTime.now();
+      final tasks = [
+        for (final t in state.tasks)
+          if (t.id != task.id) t,
+        task.copyWith(completedAt: () => now),
+      ];
+      final milestone =
+          milestoneReached(before, computeStreak(tasks, now).current);
+      if (milestone != null) {
+        await showMilestone(context,
+            days: milestone, completions: completionsByDay(tasks));
+        if (!context.mounted) return;
+      }
       showUndo(context, 'Completed “${task.title}”', () async {
         await state.updateTask(task);
         if (nextId != null) await state.deleteTaskById(nextId);

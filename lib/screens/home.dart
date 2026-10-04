@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -11,6 +12,7 @@ import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'add_task.dart';
+import 'milestone.dart';
 import 'profile.dart';
 import 'shell.dart';
 import 'task_detail.dart';
@@ -57,7 +59,17 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              StreakChip(days: streak.current),
+              GestureDetector(
+                // Debug builds only: long-press to preview the celebration.
+                onLongPress: kDebugMode
+                    ? () => showMilestone(context, days: 7, completions: {
+                          // Sample week so the preview looks like the real thing.
+                          for (var i = 0; i < 7; i++)
+                            DateTime(today.year, today.month, today.day - i): 1,
+                        })
+                    : null,
+                child: StreakChip(days: streak.current),
+              ),
               const SizedBox(width: DfSpace.s2),
               Semantics(
                 button: true,
@@ -471,6 +483,23 @@ class _ProgressCard extends StatelessWidget {
     final monday = today.subtract(Duration(days: today.weekday - 1));
     const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
+    if (total > 0 && left == 0) {
+      final tomorrow = state
+          .tasksOn(today.add(const Duration(days: 1)))
+          .where((t) => !t.isDone)
+          .length;
+      final streakLine = streak.current > 1
+          ? 'Streak is now ${streak.current} days.'
+          : 'That starts your streak.';
+      final tomorrowLine = tomorrow == 0
+          ? ' Nothing lined up for tomorrow yet.'
+          : ' Tomorrow has $tomorrow ${tomorrow == 1 ? 'task' : 'tasks'} lined up.';
+      return _AllDoneCard(
+        title: 'All $total done. Nice work.',
+        body: '$streakLine$tomorrowLine$goalLine',
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(DfSpace.s5),
       decoration: BoxDecoration(
@@ -537,6 +566,61 @@ class _ProgressCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Replaces the progress card once everything planned for today is done.
+class _AllDoneCard extends StatelessWidget {
+  const _AllDoneCard({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.df;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.94, end: 1),
+      duration: MediaQuery.of(context).disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 420),
+      curve: Curves.easeOutBack,
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(DfSpace.s5),
+        decoration: BoxDecoration(
+          color: c.success,
+          borderRadius: BorderRadius.circular(DfRadius.xl),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 5),
+              ),
+              child: const Icon(LucideIcons.check,
+                  color: Colors.white, size: 32),
+            ),
+            const SizedBox(height: DfSpace.s3),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: DfText.h2.copyWith(color: Colors.white)),
+            const SizedBox(height: 4),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: DfText.small
+                  .copyWith(color: Colors.white.withValues(alpha: 0.9)),
+            ),
+          ],
+        ),
       ),
     );
   }

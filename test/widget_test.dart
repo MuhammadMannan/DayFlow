@@ -2,6 +2,7 @@ import 'package:dayflow/data/notifications.dart';
 import 'package:dayflow/data/quick_parse.dart';
 import 'package:dayflow/data/streak.dart';
 import 'package:dayflow/models/models.dart';
+import 'package:dayflow/screens/milestone.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Task _done(DateTime day) => Task(
@@ -168,6 +169,19 @@ void main() {
       );
       expect(done.first.at, DateTime(2026, 10, 4, 20));
       expect(done.first.title, 'Keep your 1-day streak');
+    });
+  });
+
+  group('milestoneReached', () {
+    test('fires when a milestone is crossed', () {
+      expect(milestoneReached(6, 7), 7);
+      expect(milestoneReached(29, 30), 30);
+    });
+
+    test('does not fire between or on repeat', () {
+      expect(milestoneReached(7, 8), isNull);
+      expect(milestoneReached(7, 7), isNull);
+      expect(milestoneReached(0, 1), isNull);
     });
   });
 }
