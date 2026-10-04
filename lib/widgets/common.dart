@@ -629,6 +629,7 @@ class DfTextField extends StatelessWidget {
     this.suffix,
     this.autofillHints,
     this.onSubmitted,
+    this.onChanged,
     this.textInputAction,
   });
 
@@ -642,6 +643,7 @@ class DfTextField extends StatelessWidget {
   final Widget? suffix;
   final Iterable<String>? autofillHints;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
   final TextInputAction? textInputAction;
 
   @override
@@ -665,6 +667,7 @@ class DfTextField extends StatelessWidget {
           autofillHints: autofillHints,
           autocorrect: false,
           onSubmitted: onSubmitted,
+          onChanged: onChanged,
           textInputAction: textInputAction,
           style: DfText.body.copyWith(color: c.text),
           cursorColor: c.primary,

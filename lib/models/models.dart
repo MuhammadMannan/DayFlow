@@ -134,6 +134,7 @@ class Tag {
     required this.name,
     required this.color,
     required this.order,
+    this.icon = 'tag',
   });
 
   final String id;
@@ -143,7 +144,11 @@ class Tag {
   final int color;
   final int order;
 
-  Map<String, dynamic> toMap() => {'name': name, 'color': color, 'order': order};
+  /// Key into the tag icon set.
+  final String icon;
+
+  Map<String, dynamic> toMap() =>
+      {'name': name, 'color': color, 'order': order, 'icon': icon};
 
   factory Tag.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? const {};
@@ -152,6 +157,7 @@ class Tag {
       name: (d['name'] as String?) ?? '',
       color: (d['color'] as int?) ?? 0,
       order: (d['order'] as int?) ?? 0,
+      icon: (d['icon'] as String?) ?? 'tag',
     );
   }
 }

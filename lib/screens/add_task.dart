@@ -7,6 +7,7 @@ import '../data/quick_parse.dart';
 import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import 'tags.dart';
 
 /// Opens the add sheet. Pass [task] to edit, or [day] / [title] to prefill.
 Future<void> showAddTask(
@@ -645,6 +646,30 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 child: TagChip(tag: tag, selected: tag.id == _tagId),
               ),
             ),
+          GestureDetector(
+            onTap: () async {
+              final id = await showTagEditor(context);
+              if (id != null && mounted) setState(() => _tagId = id);
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(DfRadius.full),
+                border: Border.all(color: c.border, width: 1.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(LucideIcons.plus, size: 13, color: c.textSecondary),
+                  const SizedBox(width: 4),
+                  Text('New',
+                      style: DfText.smallStrong
+                          .copyWith(color: c.textSecondary)),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
       const SizedBox(height: DfSpace.s6),

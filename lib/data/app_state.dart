@@ -293,10 +293,13 @@ class AppState extends ChangeNotifier {
   Future<void> _seedTags() async {
     _seeded = true;
     const names = ['Work', 'School', 'Personal', 'Health'];
+    const icons = ['briefcase', 'graduationCap', 'user', 'heart'];
     final batch = FirebaseFirestore.instance.batch();
     for (var i = 0; i < names.length; i++) {
-      batch.set(_tagsRef.doc(names[i].toLowerCase()),
-          Tag(id: '', name: names[i], color: i, order: i).toMap());
+      batch.set(
+          _tagsRef.doc(names[i].toLowerCase()),
+          Tag(id: '', name: names[i], color: i, order: i, icon: icons[i])
+              .toMap());
     }
     try {
       await batch.commit();
@@ -305,14 +308,22 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> addTag(String name, int color) => _guard(() => _tagsRef.add(
-      Tag(id: '', name: name.trim(), color: color, order: tags.length)
-          .toMap()));
+  /// Creates a tag and returns its id.
+  Future<String> addTag(String name, int color, {String icon = 'tag'}) async {
+    final ref = _tagsRef.doc();
+    final order =
+        tags.isEmpty ? 0 : tags.map((t) => t.order).reduce((a, b) => a > b ? a : b) + 1;
+    await _guard(() => ref.set(
+        Tag(id: ref.id, name: name.trim(), color: color, order: order, icon: icon)
+            .toMap()));
+    return ref.id;
+  }
 
-  Future<void> updateTag(Tag tag, {String? name, int? color}) =>
+  Future<void> updateTag(Tag tag, {String? name, int? color, String? icon}) =>
       _guard(() => _tagsRef.doc(tag.id).update({
             if (name != null) 'name': name.trim(),
             if (color != null) 'color': color,
+            if (icon != null) 'icon': icon,
           }));
 
   Future<void> deleteTag(Tag tag) => _guard(() => _tagsRef.doc(tag.id).delete());
