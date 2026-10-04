@@ -177,7 +177,8 @@ class TaskDetailScreen extends StatelessWidget {
                         _InfoRow(
                           icon: LucideIcons.bell,
                           label: 'Reminder',
-                          value: t.remind ? 'At time of task' : 'Off',
+                          value: reminderLabel(
+                              t.remind && t.hasTime, t.remindMinutes),
                         ),
                         Divider(color: c.border),
                         _InfoRow(

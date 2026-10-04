@@ -1,3 +1,4 @@
+import 'package:dayflow/data/notifications.dart';
 import 'package:dayflow/data/quick_parse.dart';
 import 'package:dayflow/data/streak.dart';
 import 'package:dayflow/models/models.dart';
@@ -97,6 +98,76 @@ void main() {
     test('12am and 12pm', () {
       expect(parseQuick('x 12pm', now: now).hour, 12);
       expect(parseQuick('x 12am', now: now).hour, 0);
+    });
+  });
+
+  group('planNotifications', () {
+    Task timed(String id, DateTime due,
+            {bool remind = true, int lead = 0, DateTime? done}) =>
+        Task(
+          id: id,
+          title: id,
+          due: due,
+          hasTime: true,
+          remind: remind,
+          remindMinutes: lead,
+          createdAt: now,
+          completedAt: done,
+        );
+
+    test('schedules future reminders with lead time', () {
+      final plan = planNotifications(
+        tasks: [timed('a', DateTime(2026, 10, 3, 20), lead: 60)],
+        tags: const [],
+        settings: const Settings(nudgeOn: false),
+        now: now,
+      );
+      expect(plan, hasLength(1));
+      expect(plan.single.at, DateTime(2026, 10, 3, 19));
+      expect(plan.single.body, 'At 8:00 PM');
+    });
+
+    test('skips past, completed and reminder-off tasks', () {
+      final plan = planNotifications(
+        tasks: [
+          timed('past', DateTime(2026, 10, 3, 9)),
+          timed('done', DateTime(2026, 10, 3, 21), done: now),
+          timed('off', DateTime(2026, 10, 3, 21), remind: false),
+        ],
+        tags: const [],
+        settings: const Settings(nudgeOn: false),
+        now: now,
+      );
+      expect(plan, isEmpty);
+    });
+
+    test('respects the reminders switch', () {
+      final plan = planNotifications(
+        tasks: [timed('a', DateTime(2026, 10, 3, 21))],
+        tags: const [],
+        settings: const Settings(remindersOn: false, nudgeOn: false),
+        now: now,
+      );
+      expect(plan, isEmpty);
+    });
+
+    test('nudges today only when nothing is done yet', () {
+      final open = planNotifications(
+        tasks: const [],
+        tags: const [],
+        settings: const Settings(remindersOn: false),
+        now: now,
+      );
+      expect(open.first.at, DateTime(2026, 10, 3, 20));
+
+      final done = planNotifications(
+        tasks: [_done(ago(0))],
+        tags: const [],
+        settings: const Settings(remindersOn: false),
+        now: now,
+      );
+      expect(done.first.at, DateTime(2026, 10, 4, 20));
+      expect(done.first.title, 'Keep your 1-day streak');
     });
   });
 }

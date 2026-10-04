@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import '../models/models.dart';
 import 'device_calendar.dart';
+import 'notifications.dart';
 import 'streak.dart';
 
 /// Holds the signed-in user's tasks, tags, settings and calendar events, and
@@ -16,16 +17,17 @@ class AppState extends ChangeNotifier {
       tasks = s.docs.map(Task.fromDoc).toList();
       loaded = true;
       error = null;
-      notifyListeners();
+      _changed();
     }, onError: _onError);
     _tagSub = _tagsRef.orderBy('order').snapshots().listen((s) {
       tags = s.docs.map(Tag.fromDoc).toList();
       if (tags.isEmpty && !_seeded) _seedTags();
-      notifyListeners();
+      _changed();
     }, onError: _onError);
     _settingsSub = _userRef.snapshots().listen((s) {
       settings = Settings.fromMap(s.data());
-      notifyListeners();
+      settingsLoaded = true;
+      _changed();
     }, onError: _onError);
     refreshCalendar();
   }
@@ -35,6 +37,7 @@ class AppState extends ChangeNotifier {
   List<Tag> tags = [];
   Settings settings = const Settings();
   bool loaded = false;
+  bool settingsLoaded = false;
   String? error;
 
   CalendarAccess calendarAccess = CalendarAccess.notDetermined;
@@ -49,6 +52,17 @@ class AppState extends ChangeNotifier {
       _userRef.collection('tasks');
   CollectionReference<Map<String, dynamic>> get _tagsRef =>
       _userRef.collection('tags');
+
+  void _changed() {
+    notifyListeners();
+    syncNotifications();
+  }
+
+  /// Brings the device's pending notifications in line with the data.
+  Future<void> syncNotifications() async {
+    if (!loaded || !settingsLoaded) return;
+    await Notifications.sync(tasks: tasks, tags: tags, settings: settings);
+  }
 
   void _onError(Object e) {
     error = e is FirebaseException && e.code == 'permission-denied'
@@ -171,6 +185,7 @@ class AppState extends ChangeNotifier {
     bool hasTime = false,
     Repeat repeat = Repeat.none,
     bool remind = false,
+    int remindMinutes = 0,
   }) async {
     final ref = _tasksRef.doc();
     final task = Task(
@@ -182,6 +197,7 @@ class AppState extends ChangeNotifier {
       hasTime: hasTime,
       repeat: repeat,
       remind: remind,
+      remindMinutes: remindMinutes,
       createdAt: DateTime.now(),
     );
     await _guard(() => ref.set(task.toMap()));
@@ -237,6 +253,7 @@ class AppState extends ChangeNotifier {
         hasTime: task.hasTime,
         repeat: task.repeat,
         remind: task.remind,
+        remindMinutes: task.remindMinutes,
       );
     }
     return null;

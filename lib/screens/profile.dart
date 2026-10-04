@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/app_state.dart';
 import '../data/device_calendar.dart';
+import '../data/notifications.dart';
 import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
@@ -58,6 +59,22 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+  /// Turning a notification switch on asks iOS for permission if needed.
+  Future<void> _setNotify(
+      BuildContext context, AppState state, String key, bool on) async {
+    if (on && !await Notifications.allowed()) {
+      final granted = await Notifications.requestPermission();
+      if (!granted && context.mounted) {
+        showMessage(context,
+            'Notifications are off for DayFlow. Turn them on in Settings › Notifications.');
+      }
+    }
+    if (context.mounted) await _save(context, state, {key: on});
+  }
+
+  static String _hourLabel(int h) =>
+      '${h % 12 == 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}';
 
   Future<void> _save(
       BuildContext context, AppState state, Map<String, dynamic> patch) async {
@@ -268,7 +285,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: Switch(
                       value: s.remindersOn,
                       onChanged: (v) =>
-                          _save(context, state, {'remindersOn': v}),
+                          _setNotify(context, state, 'remindersOn', v),
                     ),
                   ),
                   Divider(color: c.border),
@@ -279,17 +296,37 @@ class ProfileScreen extends StatelessWidget {
                     label: 'Streak-at-risk nudge',
                     trailing: Switch(
                       value: s.nudgeOn,
-                      onChanged: (v) => _save(context, state, {'nudgeOn': v}),
+                      onChanged: (v) =>
+                          _setNotify(context, state, 'nudgeOn', v),
                     ),
                   ),
+                  if (s.nudgeOn) ...[
+                    Divider(color: c.border),
+                    _SettingRow(
+                      icon: LucideIcons.clock,
+                      tint: c.flame,
+                      bg: c.flameSoft,
+                      label: 'Nudge time',
+                      value: _hourLabel(s.nudgeHour),
+                      onTap: () async {
+                        final v = await _choose<int>(
+                          context,
+                          title: 'Nudge time',
+                          description:
+                              'Sent only on days when you have not finished a task yet.',
+                          options: [
+                            for (final h in const [17, 18, 19, 20, 21, 22])
+                              (h, _hourLabel(h)),
+                          ],
+                          current: s.nudgeHour,
+                        );
+                        if (v != null && context.mounted) {
+                          await _save(context, state, {'nudgeHour': v});
+                        }
+                      },
+                    ),
+                  ],
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 4),
-              child: Text(
-                'Notifications are not sent yet in this build. These switches save your preference.',
-                style: DfText.caption.copyWith(color: c.textMuted),
               ),
             ),
             const _Group('Appearance'),

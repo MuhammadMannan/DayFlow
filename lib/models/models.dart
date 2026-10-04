@@ -14,6 +14,20 @@ extension RepeatLabel on Repeat {
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
+/// Reminder lead times offered in the app, in minutes before the task.
+const reminderLeads = [0, 15, 60, 1440];
+
+String reminderLabel(bool on, int minutes) {
+  if (!on) return 'Off';
+  return switch (minutes) {
+    0 => 'At time of task',
+    15 => '15 min before',
+    60 => '1 hour before',
+    1440 => '1 day before',
+    _ => '$minutes min before',
+  };
+}
+
 class Task {
   Task({
     required this.id,
@@ -24,6 +38,7 @@ class Task {
     this.hasTime = false,
     this.repeat = Repeat.none,
     this.remind = false,
+    this.remindMinutes = 0,
     required this.createdAt,
     this.completedAt,
   });
@@ -38,6 +53,9 @@ class Task {
   final bool hasTime;
   final Repeat repeat;
   final bool remind;
+
+  /// How long before [due] the reminder fires. 0 means at the time.
+  final int remindMinutes;
   final DateTime createdAt;
   final DateTime? completedAt;
 
@@ -57,6 +75,7 @@ class Task {
     bool? hasTime,
     Repeat? repeat,
     bool? remind,
+    int? remindMinutes,
     DateTime? Function()? completedAt,
   }) =>
       Task(
@@ -68,6 +87,7 @@ class Task {
         hasTime: hasTime ?? this.hasTime,
         repeat: repeat ?? this.repeat,
         remind: remind ?? this.remind,
+        remindMinutes: remindMinutes ?? this.remindMinutes,
         createdAt: createdAt,
         completedAt: completedAt != null ? completedAt() : this.completedAt,
       );
@@ -80,6 +100,7 @@ class Task {
         'hasTime': hasTime,
         'repeat': repeat.name,
         'remind': remind,
+        'remindMinutes': remindMinutes,
         'createdAt': Timestamp.fromDate(createdAt),
         'completedAt':
             completedAt == null ? null : Timestamp.fromDate(completedAt!),
@@ -100,6 +121,7 @@ class Task {
         orElse: () => Repeat.none,
       ),
       remind: (d['remind'] as bool?) ?? false,
+      remindMinutes: (d['remindMinutes'] as int?) ?? 0,
       createdAt: ts(d['createdAt']) ?? DateTime.now(),
       completedAt: ts(d['completedAt']),
     );
@@ -141,6 +163,8 @@ class Settings {
     this.remindersOn = true,
     this.nudgeOn = true,
     this.showCalendar = true,
+    this.nudgeHour = 20,
+    this.onboarded = false,
   });
 
   /// 0 means no goal; otherwise tasks per day.
@@ -150,12 +174,20 @@ class Settings {
   final bool nudgeOn;
   final bool showCalendar;
 
+  /// Hour of the day (0-23) for the streak-at-risk nudge.
+  final int nudgeHour;
+
+  /// False until the user has finished or skipped onboarding.
+  final bool onboarded;
+
   Map<String, dynamic> toMap() => {
         'dailyGoal': dailyGoal,
         'theme': theme,
         'remindersOn': remindersOn,
         'nudgeOn': nudgeOn,
         'showCalendar': showCalendar,
+        'nudgeHour': nudgeHour,
+        'onboarded': onboarded,
       };
 
   factory Settings.fromMap(Map<String, dynamic>? d) => Settings(
@@ -164,6 +196,8 @@ class Settings {
         remindersOn: (d?['remindersOn'] as bool?) ?? true,
         nudgeOn: (d?['nudgeOn'] as bool?) ?? true,
         showCalendar: (d?['showCalendar'] as bool?) ?? true,
+        nudgeHour: (d?['nudgeHour'] as int?) ?? 20,
+        onboarded: (d?['onboarded'] as bool?) ?? false,
       );
 }
 

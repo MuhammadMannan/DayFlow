@@ -46,6 +46,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   DateTime? _date;
   TimeOfDay? _time;
   bool _remind = false;
+  int _remindMinutes = 0;
   Repeat _repeat = Repeat.none;
   String? _tagId;
   bool _saving = false;
@@ -70,6 +71,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       _date = t.dueDay;
       _time = t.hasTime ? TimeOfDay.fromDateTime(t.due!) : null;
       _remind = t.remind;
+      _remindMinutes = t.remindMinutes;
       _repeat = t.repeat;
       _tagId = t.tagId;
       _dateTouched = _timeTouched = true;
@@ -142,6 +144,52 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         }
       });
 
+  /// A reminder needs a time to fire at, so turning one on asks for it.
+  Future<void> _setReminder(bool on, [int? minutes]) async {
+    if (on && _time == null) {
+      await _pickTime();
+      if (_time == null) return;
+    }
+    setState(() {
+      _remind = on;
+      if (minutes != null) _remindMinutes = minutes;
+    });
+  }
+
+  Future<void> _pickReminder() async {
+    final c = context.df;
+    // -1 stands for "Off".
+    final current = _remind ? _remindMinutes : -1;
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(DfSpace.s5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Reminder', style: DfText.h3.copyWith(color: c.text)),
+              const SizedBox(height: DfSpace.s2),
+              for (final m in [-1, ...reminderLeads])
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(reminderLabel(m >= 0, m),
+                      style: DfText.body.copyWith(color: c.text)),
+                  trailing: m == current
+                      ? Icon(LucideIcons.check, color: c.primary, size: 20)
+                      : null,
+                  onTap: () => Navigator.pop(ctx, m),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    await _setReminder(picked >= 0, picked >= 0 ? picked : null);
+  }
+
   Future<void> _pickTag() async {
     final state = AppScope.read(context);
     final c = context.df;
@@ -204,7 +252,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           due: () => due,
           hasTime: _time != null,
           repeat: _repeat,
-          remind: _remind,
+          remind: _remind && _time != null,
+          remindMinutes: _remindMinutes,
         ));
       } else {
         await state.addTask(
@@ -214,7 +263,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           due: due,
           hasTime: _time != null,
           repeat: _repeat,
-          remind: _remind,
+          remind: _remind && _time != null,
+          remindMinutes: _remindMinutes,
         );
       }
       if (mounted) Navigator.pop(context);
@@ -350,8 +400,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             _QuickChip(
               icon: LucideIcons.bell,
               label: 'Remind',
-              active: _remind,
-              onTap: () => setState(() => _remind = !_remind),
+              active: _remind && _time != null,
+              onTap: () => _setReminder(!_remind),
             ),
             const SizedBox(width: 8),
             _QuickChip(
@@ -557,8 +607,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             _FormRow(
               icon: LucideIcons.bell,
               label: 'Reminder',
-              value: _remind ? 'At time of task' : 'Off',
-              onTap: () => setState(() => _remind = !_remind),
+              value: reminderLabel(_remind && _time != null, _remindMinutes),
+              onTap: _pickReminder,
             ),
             Divider(color: c.border),
             _FormRow(

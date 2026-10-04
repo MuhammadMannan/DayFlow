@@ -426,7 +426,7 @@ class TaskRow extends StatelessWidget {
               ),
             ),
           ),
-          if (task.remind)
+          if (task.remind && task.hasTime)
             Padding(
               padding: const EdgeInsets.only(top: 12, left: 8),
               child: Icon(LucideIcons.bell, size: 18, color: c.textMuted),

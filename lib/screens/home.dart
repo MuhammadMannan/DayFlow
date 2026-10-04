@@ -460,7 +460,11 @@ class _ProgressCard extends StatelessWidget {
         body = '$left to go. Finish one to start a streak.';
       }
     }
-    final goalLine = goal > 0 ? ' Goal: $done of $goal.' : '';
+    final goalLine = goal == 0
+        ? ''
+        : done >= goal
+            ? ' Daily goal met.'
+            : ' Goal: $done of $goal.';
 
     final days = completionsByDay(state.tasks);
     final today = dateOnly(DateTime.now());
