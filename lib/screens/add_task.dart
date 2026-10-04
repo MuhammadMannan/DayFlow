@@ -168,6 +168,39 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     });
   }
 
+  Future<void> _pickRepeat() async {
+    final c = context.df;
+    final picked = await showModalBottomSheet<Repeat>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(DfSpace.s5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Repeat', style: DfText.h3.copyWith(color: c.text)),
+              const SizedBox(height: DfSpace.s2),
+              for (final r in Repeat.values)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    repeatLabel(r, _date),
+                    style: DfText.body.copyWith(color: c.text),
+                  ),
+                  trailing: r == _repeat
+                      ? Icon(LucideIcons.check, color: c.primary, size: 20)
+                      : null,
+                  onTap: () => Navigator.pop(ctx, r),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked != null) setState(() => _repeat = picked);
+  }
+
   Future<void> _pickReminder() async {
     final c = context.df;
     // -1 stands for "Off".
@@ -671,12 +704,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               icon: LucideIcons.repeat,
               label: 'Repeat',
               value: repeatLabel(_repeat, _date),
-              onTap: _date == null
-                  ? null
-                  : () => setState(
-                      () => _repeat = Repeat
-                          .values[(_repeat.index + 1) % Repeat.values.length],
-                    ),
+              onTap: _date == null ? null : _pickRepeat,
             ),
           ],
         ),

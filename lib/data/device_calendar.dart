@@ -48,6 +48,20 @@ class DeviceCalendar {
     }
   }
 
+  /// Opens the iOS share sheet with [text] and an optional PNG image.
+  static Future<void> share(String text, {Uint8List? image}) async {
+    try {
+      await _channel.invokeMethod<void>('share', {
+        'text': text,
+        if (image != null) 'image': image,
+      });
+    } on MissingPluginException {
+      // Not available on this platform.
+    } on PlatformException catch (e) {
+      debugPrint('Share failed: $e');
+    }
+  }
+
   static Future<List<DeviceCal>> calendars() async {
     try {
       final raw = await _channel.invokeListMethod<Map>('calendars');

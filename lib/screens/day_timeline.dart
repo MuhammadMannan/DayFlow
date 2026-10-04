@@ -65,10 +65,19 @@ void layoutTimeline(List<TimelineItem> items) {
 
 /// Hour-by-hour view of one day: timed tasks and calendar events as blocks,
 /// untimed ones in an "Anytime" row. Tap an empty slot to add a task there.
-class DayTimeline extends StatelessWidget {
+class DayTimeline extends StatefulWidget {
   const DayTimeline({super.key, required this.day});
 
   final DateTime day;
+
+  @override
+  State<DayTimeline> createState() => _DayTimelineState();
+}
+
+class _DayTimelineState extends State<DayTimeline> {
+  // The task being dragged to a new time, and how far it has moved.
+  String? _dragId;
+  double _dragDy = 0;
 
   static const _hourHeight = 56.0;
   static const _gutter = 56.0;
@@ -77,7 +86,7 @@ class DayTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     final state = AppScope.of(context);
-    final d = dateOnly(day);
+    final d = dateOnly(widget.day);
     final tasks = state.tasksOn(d);
     final events = state.eventsOn(d);
 
@@ -213,13 +222,16 @@ class DayTimeline extends StatelessWidget {
                 ),
                 for (final item in items)
                   Positioned(
-                    top: 8 + yOf(item.start) + 2,
+                    top: 8 +
+                        yOf(item.start) +
+                        2 +
+                        (item.task?.id == _dragId ? _dragDy : 0),
                     left: _gutter + width / item.columns * item.column + 2,
                     width: width / item.columns - 4,
                     height:
                         math.max(46, yOf(item.end) - yOf(item.start) - 4),
                     child: item.task != null
-                        ? _TaskBlock(task: item.task!, narrow: item.columns > 1)
+                        ? _draggable(context, item, state)
                         : _EventBlock(
                             event: item.event!, narrow: item.columns > 1),
                   ),
@@ -251,10 +263,69 @@ class DayTimeline extends StatelessWidget {
         ),
         const SizedBox(height: DfSpace.s3),
         Text(
-          'Tap an empty slot to add a task at that time. Events from your phone calendars are read-only.',
+          'Tap an empty slot to add a task at that time. Long-press and drag to move a task. Events from your phone calendars are read-only.',
           style: DfText.small.copyWith(color: c.textMuted),
         ),
       ],
+    );
+  }
+
+  /// Hold a task block, then drag it up or down to change its time.
+  Widget _draggable(BuildContext context, TimelineItem item, AppState state) {
+    final task = item.task!;
+    final dragging = task.id == _dragId;
+    return GestureDetector(
+      onLongPressStart: task.isDone
+          ? null
+          : (_) => setState(() {
+                _dragId = task.id;
+                _dragDy = 0;
+              }),
+      onLongPressMoveUpdate: (d) {
+        if (_dragId == task.id) {
+          setState(() => _dragDy = d.offsetFromOrigin.dy);
+        }
+      },
+      onLongPressEnd: (_) async {
+        if (_dragId != task.id) return;
+        // Snap to the nearest quarter hour and keep it on the same day.
+        final moved = (_dragDy / _hourHeight * 60 / 15).round() * 15;
+        final minutes = (item.start + moved).clamp(0, 23 * 60 + 45);
+        setState(() {
+          _dragId = null;
+          _dragDy = 0;
+        });
+        if (minutes == item.start) return;
+        final due = task.due!;
+        final next = DateTime(
+            due.year, due.month, due.day, minutes ~/ 60, minutes % 60);
+        try {
+          await state.updateTask(task.copyWith(due: () => next));
+          if (context.mounted) {
+            showUndo(context, '“${task.title}” moved to ${formatTime(next)}',
+                () => state.updateTask(task));
+          }
+        } catch (_) {
+          if (context.mounted) {
+            showMessage(context, 'Could not save. Check your connection.');
+          }
+        }
+      },
+      onLongPressCancel: () => setState(() {
+        _dragId = null;
+        _dragDy = 0;
+      }),
+      child: AnimatedScale(
+        scale: dragging ? 1.03 : 1,
+        duration: const Duration(milliseconds: 120),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DfRadius.md),
+            boxShadow: dragging ? DfShadow.floating : null,
+          ),
+          child: _TaskBlock(task: task, narrow: item.columns > 1),
+        ),
+      ),
     );
   }
 

@@ -264,9 +264,9 @@ class _TasksScreenState extends State<TasksScreen> {
             )
           else ...[
             ..._section('Overdue', overdue, color: c.danger),
-            ..._section('Today', today),
+            ..._section('Today', today, reorderable: true),
             ..._section('Upcoming', upcoming, groupByDay: true),
-            ..._section('Someday', someday),
+            ..._section('Someday', someday, reorderable: true),
             ..._section('Completed', completed, muted: true, showDate: true),
             const SizedBox(height: DfSpace.s4),
             Container(
@@ -282,7 +282,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Swipe right to complete, left to reschedule. Tap a task for details.',
+                      'Swipe right to complete, left to reschedule. Hold and drag to reorder.',
                       style: DfText.caption.copyWith(color: c.primaryStrong),
                     ),
                   ),
@@ -302,13 +302,50 @@ class _TasksScreenState extends State<TasksScreen> {
     bool groupByDay = false,
     bool muted = false,
     bool showDate = false,
+    bool reorderable = false,
   }) {
     if (tasks.isEmpty) return const [];
     final c = context.df;
     final collapsed = _collapsed.contains(title);
     final today = dateOnly(DateTime.now());
     final rows = <Widget>[];
-    if (!collapsed) {
+    if (!collapsed && reorderable && tasks.length > 1) {
+      // Hold and drag to reorder within the section.
+      rows.add(ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: tasks.length,
+        proxyDecorator: (child, index, animation) =>
+            Material(color: Colors.transparent, child: child),
+        onReorder: (from, to) async {
+          final ordered = [...tasks];
+          final moved = ordered.removeAt(from);
+          ordered.insert(to > from ? to - 1 : to, moved);
+          try {
+            await AppScope.read(context).reorder(ordered);
+          } catch (_) {
+            if (mounted) {
+              showMessage(context, 'Could not save. Check your connection.');
+            }
+          }
+        },
+        itemBuilder: (context, i) {
+          final t = tasks[i];
+          return Padding(
+            key: ValueKey('row-${t.id}'),
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _Swipeable(
+              task: t,
+              child: TaskRow(
+                task: t,
+                onToggle: (v) => toggleTask(context, t, v),
+                onTap: () => openTaskDetail(context, t),
+              ),
+            ),
+          );
+        },
+      ));
+    } else if (!collapsed) {
       DateTime? lastDay;
       for (final t in tasks) {
         if (groupByDay && t.dueDay != lastDay) {
@@ -332,7 +369,7 @@ class _TasksScreenState extends State<TasksScreen> {
             onTap: () => openTaskDetail(context, t),
           ),
         ));
-        rows.add(const SizedBox(height: DfSpace.s2));
+        rows.add(const SizedBox(height: 10));
       }
     }
     return [

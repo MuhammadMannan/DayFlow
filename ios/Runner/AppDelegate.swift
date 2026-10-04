@@ -31,6 +31,21 @@ import UserNotifications
         result(self.calendarStatus())
       case "request":
         self.requestCalendarAccess(result: result)
+      case "share":
+        guard let args = call.arguments as? [String: Any],
+          let text = args["text"] as? String
+        else {
+          result(FlutterError(code: "bad_args", message: "text required", details: nil))
+          return
+        }
+        var items: [Any] = [text]
+        if let png = args["image"] as? FlutterStandardTypedData,
+          let image = UIImage(data: png.data)
+        {
+          items.insert(image, at: 0)
+        }
+        self.presentShareSheet(items: items)
+        result(nil)
       case "openSettings":
         if let url = URL(string: UIApplication.openSettingsURLString) {
           UIApplication.shared.open(url)
@@ -51,6 +66,22 @@ import UserNotifications
         result(FlutterMethodNotImplemented)
       }
     }
+  }
+
+  private func presentShareSheet(items: [Any]) {
+    let scene = UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .first { $0.activationState == .foregroundActive }
+    guard var top = scene?.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+      return
+    }
+    while let presented = top.presentedViewController { top = presented }
+    let sheet = UIActivityViewController(activityItems: items, applicationActivities: nil)
+    // iPad needs an anchor for the popover.
+    sheet.popoverPresentationController?.sourceView = top.view
+    sheet.popoverPresentationController?.sourceRect = CGRect(
+      x: top.view.bounds.midX, y: top.view.bounds.maxY - 80, width: 1, height: 1)
+    top.present(sheet, animated: true)
   }
 
   private func calendarStatus() -> String {

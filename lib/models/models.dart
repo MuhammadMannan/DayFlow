@@ -63,6 +63,7 @@ class Task {
     required this.createdAt,
     this.completedAt,
     this.droppedAt,
+    this.sort,
   });
 
   final String id;
@@ -85,6 +86,9 @@ class Task {
   /// list and are not counted in streaks or analytics.
   final DateTime? droppedAt;
 
+  /// Position set by dragging in the Tasks list. Null until reordered.
+  final int? sort;
+
   bool get isDone => completedAt != null;
   DateTime? get dueDay => due == null ? null : dateOnly(due!);
 
@@ -104,6 +108,7 @@ class Task {
     int? remindMinutes,
     DateTime? Function()? completedAt,
     DateTime? Function()? droppedAt,
+    int? sort,
   }) =>
       Task(
         id: id,
@@ -118,6 +123,7 @@ class Task {
         createdAt: createdAt,
         completedAt: completedAt != null ? completedAt() : this.completedAt,
         droppedAt: droppedAt != null ? droppedAt() : this.droppedAt,
+        sort: sort ?? this.sort,
       );
 
   Map<String, dynamic> toMap() => {
@@ -133,6 +139,7 @@ class Task {
         'completedAt':
             completedAt == null ? null : Timestamp.fromDate(completedAt!),
         'droppedAt': droppedAt == null ? null : Timestamp.fromDate(droppedAt!),
+        'sort': sort,
       };
 
   factory Task.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -154,6 +161,7 @@ class Task {
       createdAt: ts(d['createdAt']) ?? DateTime.now(),
       completedAt: ts(d['completedAt']),
       droppedAt: ts(d['droppedAt']),
+      sort: d['sort'] as int?,
     );
   }
 }

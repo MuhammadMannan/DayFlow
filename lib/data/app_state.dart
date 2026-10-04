@@ -119,12 +119,23 @@ class AppState extends ChangeNotifier {
 
   static int _byDue(Task a, Task b) {
     final ad = a.due, bd = b.due;
-    if (ad == null && bd == null) return a.createdAt.compareTo(b.createdAt);
+    if (ad == null && bd == null) {
+      if (a.sort != null || b.sort != null) {
+        final c = (a.sort ?? 1 << 30).compareTo(b.sort ?? 1 << 30);
+        if (c != 0) return c;
+      }
+      return a.createdAt.compareTo(b.createdAt);
+    }
     if (ad == null) return 1;
     if (bd == null) return -1;
     // Untimed tasks sort after timed ones on the same day.
     final day = dateOnly(ad).compareTo(dateOnly(bd));
     if (day != 0) return day;
+    // A hand-set order within the day wins over the clock.
+    if (a.sort != null || b.sort != null) {
+      final c = (a.sort ?? 1 << 30).compareTo(b.sort ?? 1 << 30);
+      if (c != 0) return c;
+    }
     if (a.hasTime != b.hasTime) return a.hasTime ? -1 : 1;
     final c = ad.compareTo(bd);
     return c != 0 ? c : a.createdAt.compareTo(b.createdAt);
@@ -216,6 +227,17 @@ class AppState extends ChangeNotifier {
       _guard(() => _tasksRef.doc(task.id).delete());
 
   Future<void> restoreTask(Task task) => updateTask(task);
+
+  /// Saves the order of [ordered] as dragged in the Tasks list.
+  Future<void> reorder(List<Task> ordered) {
+    final batch = FirebaseFirestore.instance.batch();
+    for (var i = 0; i < ordered.length; i++) {
+      if (ordered[i].sort != i) {
+        batch.update(_tasksRef.doc(ordered[i].id), {'sort': i});
+      }
+    }
+    return _guard(batch.commit);
+  }
 
   /// Marks a task "won't do": it disappears without counting against you.
   Future<void> dropTask(Task task) =>
