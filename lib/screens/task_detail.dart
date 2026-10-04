@@ -290,7 +290,7 @@ class TaskDetailScreen extends StatelessWidget {
                           DfPill(
                             label: 'Next week',
                             onTap: () =>
-                                move(today.add(const Duration(days: 7))),
+                                move(today.add(Duration(days: 8 - today.weekday))),
                           ),
                           const SizedBox(width: 8),
                           DfPill(label: 'Pick date', onTap: pickDate),

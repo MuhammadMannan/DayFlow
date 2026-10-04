@@ -8,6 +8,9 @@ import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'add_task.dart';
+import 'profile.dart';
+import 'reschedule.dart';
+import 'tags.dart';
 import 'shell.dart';
 import 'task_detail.dart';
 
@@ -53,6 +56,51 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
+  void _showMore() {
+    final c = context.df;
+    final state = AppScope.read(context);
+    const sections = ['Overdue', 'Today', 'Upcoming', 'Someday', 'Completed'];
+    Widget item(IconData icon, String label, VoidCallback onTap) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(icon, size: 20, color: c.text),
+          title: Text(label, style: DfText.body.copyWith(color: c.text)),
+          onTap: () {
+            Navigator.pop(context);
+            onTap();
+          },
+        );
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: DfSpace.s5, vertical: DfSpace.s3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              item(LucideIcons.chevronDown, 'Expand all sections',
+                  () => setState(_collapsed.clear)),
+              item(LucideIcons.chevronUp, 'Collapse all sections',
+                  () => setState(() => _collapsed.addAll(sections))),
+              item(
+                LucideIcons.tag,
+                'Manage tags',
+                () => Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        AppScope(state: state, child: const TagsScreen()),
+                  ),
+                ),
+              ),
+              item(LucideIcons.user, 'Profile and settings',
+                  () => openProfile(context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   bool _matches(Task t) {
     if (_tagFilter != null && t.tagId != _tagFilter) return false;
     final q = _search.text.trim().toLowerCase();
@@ -94,6 +142,12 @@ class _TasksScreenState extends State<TasksScreen> {
                   _searching = !_searching;
                   if (!_searching) _search.clear();
                 }),
+              ),
+              const SizedBox(width: 8),
+              DfIconButton(
+                icon: LucideIcons.ellipsis,
+                semanticLabel: 'More',
+                onPressed: _showMore,
               ),
             ],
           ),
@@ -228,7 +282,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Swipe right to complete, left to delete. Tap a task to edit or reschedule.',
+                      'Swipe right to complete, left to reschedule. Tap a task for details.',
                       style: DfText.caption.copyWith(color: c.primaryStrong),
                     ),
                   ),
@@ -384,23 +438,17 @@ class _Swipeable extends StatelessWidget {
       key: ValueKey('swipe-${task.id}-${task.isDone}'),
       background: bg(c.success, LucideIcons.check,
           task.isDone ? 'Not done' : 'Done', true),
-      secondaryBackground: bg(c.danger, LucideIcons.trash, 'Delete', false),
+      secondaryBackground:
+          bg(c.primary, LucideIcons.calendar, 'Reschedule', false),
+      // A finished task has nothing to reschedule.
+      direction: task.isDone
+          ? DismissDirection.startToEnd
+          : DismissDirection.horizontal,
       confirmDismiss: (direction) async {
-        final state = AppScope.read(context);
         if (direction == DismissDirection.startToEnd) {
           await toggleTask(context, task, !task.isDone);
         } else {
-          try {
-            await state.deleteTask(task);
-            if (context.mounted) {
-              showUndo(context, '“${task.title}” deleted',
-                  () => state.restoreTask(task));
-            }
-          } catch (_) {
-            if (context.mounted) {
-              showMessage(context, 'Could not delete. Check your connection.');
-            }
-          }
+          await showReschedule(context, task);
         }
         // The list rebuilds from Firestore, so never remove the row locally.
         return false;

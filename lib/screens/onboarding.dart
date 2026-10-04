@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/app_state.dart';
+import '../data/device_calendar.dart';
 import '../data/notifications.dart';
 import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import 'calendars.dart';
 
 /// Three steps shown once after sign-up: daily goal, calendar, reminders.
 class OnboardingScreen extends StatefulWidget {
@@ -93,7 +95,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     DfButton(
                       label: 'Connect calendars',
                       onPressed: () async {
-                        await AppScope.read(context).connectCalendar();
+                        final state = AppScope.read(context);
+                        await state.connectCalendar();
+                        if (!context.mounted) return;
+                        // With access granted, let them pick which to show.
+                        if (state.calendarAccess == CalendarAccess.granted &&
+                            state.calendars.isNotEmpty) {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => AppScope(
+                                  state: state,
+                                  child: const CalendarsScreen()),
+                            ),
+                          );
+                        }
                         if (mounted) _next();
                       },
                     ),

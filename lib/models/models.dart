@@ -62,6 +62,7 @@ class Task {
     this.remindMinutes = 0,
     required this.createdAt,
     this.completedAt,
+    this.droppedAt,
   });
 
   final String id;
@@ -79,6 +80,10 @@ class Task {
   final int remindMinutes;
   final DateTime createdAt;
   final DateTime? completedAt;
+
+  /// Set when the task was marked "won't do". Dropped tasks leave every
+  /// list and are not counted in streaks or analytics.
+  final DateTime? droppedAt;
 
   bool get isDone => completedAt != null;
   DateTime? get dueDay => due == null ? null : dateOnly(due!);
@@ -98,6 +103,7 @@ class Task {
     bool? remind,
     int? remindMinutes,
     DateTime? Function()? completedAt,
+    DateTime? Function()? droppedAt,
   }) =>
       Task(
         id: id,
@@ -111,6 +117,7 @@ class Task {
         remindMinutes: remindMinutes ?? this.remindMinutes,
         createdAt: createdAt,
         completedAt: completedAt != null ? completedAt() : this.completedAt,
+        droppedAt: droppedAt != null ? droppedAt() : this.droppedAt,
       );
 
   Map<String, dynamic> toMap() => {
@@ -125,6 +132,7 @@ class Task {
         'createdAt': Timestamp.fromDate(createdAt),
         'completedAt':
             completedAt == null ? null : Timestamp.fromDate(completedAt!),
+        'droppedAt': droppedAt == null ? null : Timestamp.fromDate(droppedAt!),
       };
 
   factory Task.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -145,6 +153,7 @@ class Task {
       remindMinutes: (d['remindMinutes'] as int?) ?? 0,
       createdAt: ts(d['createdAt']) ?? DateTime.now(),
       completedAt: ts(d['completedAt']),
+      droppedAt: ts(d['droppedAt']),
     );
   }
 }

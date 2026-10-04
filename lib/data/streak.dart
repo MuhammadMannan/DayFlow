@@ -6,6 +6,7 @@ class StreakInfo {
     required this.best,
     required this.freezeAvailable,
     required this.doneToday,
+    this.frozenDays = const {},
   });
 
   final int current;
@@ -14,6 +15,9 @@ class StreakInfo {
   /// True when this week's automatic freeze has not been used.
   final bool freezeAvailable;
   final bool doneToday;
+
+  /// Missed days that a weekly freeze covered.
+  final Set<DateTime> frozenDays;
 }
 
 DateTime _weekStart(DateTime d) =>
@@ -45,6 +49,7 @@ StreakInfo computeStreak(Iterable<Task> tasks, DateTime now) {
 
   final first = days.keys.reduce((a, b) => a.isBefore(b) ? a : b);
   final frozenWeeks = <DateTime>{};
+  final frozenDays = <DateTime>{};
   var run = 0;
   var best = 0;
 
@@ -58,6 +63,7 @@ StreakInfo computeStreak(Iterable<Task> tasks, DateTime now) {
       run++;
     } else if (run > 0 && frozenWeeks.add(_weekStart(d))) {
       // Freeze spent: streak survives, length unchanged.
+      frozenDays.add(d);
     } else {
       run = 0;
     }
@@ -71,5 +77,6 @@ StreakInfo computeStreak(Iterable<Task> tasks, DateTime now) {
     best: best,
     freezeAvailable: !frozenWeeks.contains(_weekStart(today)),
     doneToday: doneToday,
+    frozenDays: frozenDays,
   );
 }

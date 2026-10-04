@@ -585,18 +585,33 @@ class _ProgressCard extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 6),
                         child: Column(
                           children: [
-                            Container(
-                              width: 14,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: (days[monday.add(Duration(days: i))] ??
-                                            0) >
-                                        0
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.25),
-                              ),
-                            ),
+                            Builder(builder: (context) {
+                              final day = monday.add(Duration(days: i));
+                              final done = (days[day] ?? 0) > 0;
+                              // A day the weekly freeze covered.
+                              final frozen = streak.frozenDays.contains(day);
+                              return Semantics(
+                                label: done
+                                    ? 'Completed'
+                                    : frozen
+                                        ? 'Streak freeze used'
+                                        : 'Not completed',
+                                child: Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: done
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.25),
+                                  ),
+                                  child: frozen && !done
+                                      ? const Icon(LucideIcons.snowflake,
+                                          size: 10, color: Colors.white)
+                                      : null,
+                                ),
+                              );
+                            }),
                             const SizedBox(height: 4),
                             Text(letters[i],
                                 style: DfText.overline.copyWith(

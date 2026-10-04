@@ -44,6 +44,7 @@ void main() {
           [5, 4, 2, 1, 0].map((d) => _done(ago(d))).toList(), now);
       expect(s.current, 5);
       expect(s.freezeAvailable, isFalse);
+      expect(s.frozenDays, {ago(3)});
     });
 
     test('a second missed day in the same week resets', () {

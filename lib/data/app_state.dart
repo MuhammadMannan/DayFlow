@@ -14,7 +14,11 @@ import 'streak.dart';
 class AppState extends ChangeNotifier {
   AppState(this.user) {
     _taskSub = _tasksRef.snapshots().listen((s) {
-      tasks = s.docs.map(Task.fromDoc).toList();
+      // Tasks marked "won't do" stay stored but leave every list and count.
+      tasks = s.docs
+          .map(Task.fromDoc)
+          .where((t) => t.droppedAt == null)
+          .toList();
       loaded = true;
       error = null;
       _changed();
@@ -212,6 +216,10 @@ class AppState extends ChangeNotifier {
       _guard(() => _tasksRef.doc(task.id).delete());
 
   Future<void> restoreTask(Task task) => updateTask(task);
+
+  /// Marks a task "won't do": it disappears without counting against you.
+  Future<void> dropTask(Task task) =>
+      updateTask(task.copyWith(droppedAt: () => DateTime.now()));
 
   static DateTime _nextOccurrence(DateTime due, Repeat r) {
     DateTime plus(int days) => DateTime(
