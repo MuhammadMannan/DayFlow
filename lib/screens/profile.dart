@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/app_state.dart';
 import '../data/device_calendar.dart';
 import '../data/notifications.dart';
+import '../data/sample_data.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import 'calendars.dart';
@@ -403,6 +405,57 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
             ),
+            // Development builds only: never shown in a release.
+            if (kDebugMode) ...[
+              const _Group('Developer'),
+              DfCard(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Column(
+                  children: [
+                    _SettingRow(
+                      icon: LucideIcons.sparkles,
+                      tint: c.primary,
+                      bg: c.primarySoft,
+                      label: 'Load sample data',
+                      value: 'Replaces tasks',
+                      onTap: () async {
+                        showMessage(context, 'Loading sample data…');
+                        try {
+                          await SampleData.load(state.user.uid);
+                          if (context.mounted) {
+                            showMessage(context, 'Sample data loaded.');
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            showMessage(context, 'Could not load sample data.');
+                          }
+                        }
+                      },
+                    ),
+                    Divider(color: c.border),
+                    _SettingRow(
+                      icon: LucideIcons.trash2,
+                      tint: c.danger,
+                      bg: c.dangerSoft,
+                      label: 'Clear all tasks',
+                      showChevron: false,
+                      onTap: () async {
+                        try {
+                          await SampleData.clear(state.user.uid);
+                          if (context.mounted) {
+                            showMessage(context, 'All tasks cleared.');
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            showMessage(context, 'Could not clear tasks.');
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: DfSpace.s4),
             Center(
               child: Text('DayFlow 2.0',
