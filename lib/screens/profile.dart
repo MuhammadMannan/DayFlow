@@ -102,7 +102,7 @@ class ProfileScreen extends StatelessWidget {
           ? 'Hidden'
           : state.calendars.isEmpty
               ? 'Connected'
-              : '${state.shownCalendarCount} of ${state.calendars.length} shown',
+              : '${state.shownCalendarCount} connected',
       CalendarAccess.denied => 'Access off',
       CalendarAccess.notDetermined => 'Not connected',
     };
@@ -261,7 +261,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: LucideIcons.calendar,
                     tint: c.event,
                     bg: c.eventSoft,
-                    label: 'Calendar',
+                    label: 'Calendars',
                     value: calendarValue,
                     onTap: () async {
                       switch (state.calendarAccess) {
@@ -308,38 +308,45 @@ class ProfileScreen extends StatelessWidget {
                     tint: c.flame,
                     bg: c.flameSoft,
                     label: 'Streak-at-risk nudge',
-                    trailing: Switch(
-                      value: s.nudgeOn,
-                      onChanged: (v) =>
-                          _setNotify(context, state, 'nudgeOn', v),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (s.nudgeOn)
+                          // Tap the time to change when the nudge is sent.
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () async {
+                              final v = await _choose<int>(
+                                context,
+                                title: 'Nudge time',
+                                description:
+                                    'Sent only on days when you have not finished a task yet.',
+                                options: [
+                                  for (final h in const [17, 18, 19, 20, 21, 22])
+                                    (h, _hourLabel(h)),
+                                ],
+                                current: s.nudgeHour,
+                              );
+                              if (v != null && context.mounted) {
+                                await _save(context, state, {'nudgeHour': v});
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 12),
+                              child: Text(_hourLabel(s.nudgeHour),
+                                  style: DfText.small
+                                      .copyWith(color: c.textMuted)),
+                            ),
+                          ),
+                        Switch(
+                          value: s.nudgeOn,
+                          onChanged: (v) =>
+                              _setNotify(context, state, 'nudgeOn', v),
+                        ),
+                      ],
                     ),
                   ),
-                  if (s.nudgeOn) ...[
-                    Divider(color: c.border),
-                    _SettingRow(
-                      icon: LucideIcons.clock,
-                      tint: c.flame,
-                      bg: c.flameSoft,
-                      label: 'Nudge time',
-                      value: _hourLabel(s.nudgeHour),
-                      onTap: () async {
-                        final v = await _choose<int>(
-                          context,
-                          title: 'Nudge time',
-                          description:
-                              'Sent only on days when you have not finished a task yet.',
-                          options: [
-                            for (final h in const [17, 18, 19, 20, 21, 22])
-                              (h, _hourLabel(h)),
-                          ],
-                          current: s.nudgeHour,
-                        );
-                        if (v != null && context.mounted) {
-                          await _save(context, state, {'nudgeHour': v});
-                        }
-                      },
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -458,7 +465,7 @@ class ProfileScreen extends StatelessWidget {
             ],
             const SizedBox(height: DfSpace.s4),
             Center(
-              child: Text('DayFlow 2.0',
+              child: Text('Sign out asks for confirmation. DayFlow 2.0',
                   style: DfText.caption.copyWith(color: c.textMuted)),
             ),
           ],

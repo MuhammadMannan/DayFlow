@@ -14,6 +14,27 @@ extension RepeatLabel on Repeat {
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
+const _weekdayNames = [
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+];
+
+/// "Weekly on Sunday", "Monthly on the 4th" and so on.
+String repeatLabel(Repeat repeat, DateTime? date) {
+  if (date == null) return repeat.label;
+  switch (repeat) {
+    case Repeat.weekly:
+      return 'Weekly on ${_weekdayNames[date.weekday - 1]}';
+    case Repeat.monthly:
+      final d = date.day;
+      final suffix = (d >= 11 && d <= 13)
+          ? 'th'
+          : switch (d % 10) { 1 => 'st', 2 => 'nd', 3 => 'rd', _ => 'th' };
+      return 'Monthly on the $d$suffix';
+    default:
+      return repeat.label;
+  }
+}
+
 /// Reminder lead times offered in the app, in minutes before the task.
 const reminderLeads = [0, 15, 60, 1440];
 

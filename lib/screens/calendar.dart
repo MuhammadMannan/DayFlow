@@ -34,6 +34,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _month = DateTime(day.year, day.month);
       });
 
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selected,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (picked != null) _select(picked);
+  }
+
   void _step(int dir) {
     if (_view == _View.month) {
       final m = DateTime(_month.year, _month.month + dir);
@@ -76,10 +87,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(title,
-                    style: DfText.h1.copyWith(color: c.text),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                // The title opens a date picker to jump to any day.
+                child: Semantics(
+                  button: true,
+                  label: '$title, choose a date',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _pickDate,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(title,
+                              style: DfText.h1.copyWith(color: c.text),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(LucideIcons.chevronDown,
+                            size: 20, color: c.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
               ),
               DfSegmented<_View>(
                 values: const [_View.month, _View.week],
@@ -89,85 +118,68 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ],
           ),
-          const SizedBox(height: DfSpace.s2),
-          Row(
-            children: [
-              _NavButton(
-                  icon: LucideIcons.chevronLeft,
-                  label: 'Previous',
-                  onTap: () => _step(-1)),
-              const SizedBox(width: 8),
-              _NavButton(
-                  icon: LucideIcons.chevronRight,
-                  label: 'Next',
-                  onTap: () => _step(1)),
-              const Spacer(),
-              if (_selected != dateOnly(DateTime.now()))
-                GestureDetector(
-                  onTap: () => _select(DateTime.now()),
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: Text('Today',
-                        style: DfText.smallStrong.copyWith(color: c.primary)),
+          const SizedBox(height: DfSpace.s4),
+          // Swipe sideways to move a month or a week at a time.
+          GestureDetector(
+            onHorizontalDragEnd: (d) {
+              final v = d.primaryVelocity ?? 0;
+              if (v.abs() > 200) _step(v < 0 ? 1 : -1);
+            },
+            child: _view == _View.month
+                ? _MonthGrid(
+                    month: _month,
+                    selected: _selected,
+                    state: state,
+                    onSelect: _select,
+                  )
+                : _WeekStrip(
+                    start: _weekStart,
+                    selected: _selected,
+                    state: state,
+                    onSelect: _select,
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: DfSpace.s3),
-          if (_view == _View.month)
-            _MonthGrid(
-              month: _month,
-              selected: _selected,
-              state: state,
-              onSelect: _select,
-            )
-          else
-            _WeekStrip(
-              start: _weekStart,
-              selected: _selected,
-              state: state,
-              onSelect: _select,
-            ),
-          const SizedBox(height: DfSpace.s3),
-          Row(
-            children: [
-              _Legend(color: c.primary, label: 'Tasks & reminders'),
-              const SizedBox(width: DfSpace.s4),
-              _Legend(color: c.event, label: 'Calendar events'),
-            ],
           ),
           const SizedBox(height: DfSpace.s4),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(DateFormat('EEEE, d MMMM').format(_selected),
-                        style: DfText.h3.copyWith(color: c.text)),
-                    Text(
-                      '${events.length} ${events.length == 1 ? 'event' : 'events'} · '
-                      '${tasks.length} ${tasks.length == 1 ? 'task' : 'tasks'}',
-                      style: DfText.caption.copyWith(color: c.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-              DfIconButton(
-                icon: LucideIcons.plus,
-                semanticLabel: 'Add task on this day',
-                onPressed: () => showAddTask(context, day: _selected),
-              ),
-            ],
-          ),
-          const SizedBox(height: DfSpace.s3),
           if (_view == _View.week)
             DayTimeline(day: _selected)
-          else
-            ..._agenda(context, state, tasks, events),
-          if (state.calendarAccess != CalendarAccess.granted) ...[
+          else ...[
+            Row(
+              children: [
+                _Legend(color: c.primary, label: 'Tasks & reminders'),
+                const SizedBox(width: DfSpace.s4),
+                _Legend(color: c.event, label: 'Calendar events'),
+              ],
+            ),
             const SizedBox(height: DfSpace.s4),
-            _CalendarAccessCard(state: state),
+            if (state.calendarAccess != CalendarAccess.granted) ...[
+              _CalendarAccessCard(state: state),
+              const SizedBox(height: DfSpace.s4),
+            ],
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(DateFormat('EEEE, d MMMM').format(_selected),
+                          style: DfText.h3.copyWith(color: c.text)),
+                      Text(
+                        '${events.length} ${events.length == 1 ? 'event' : 'events'} · '
+                        '${tasks.length} ${tasks.length == 1 ? 'task' : 'tasks'}',
+                        style: DfText.caption.copyWith(color: c.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                DfIconButton(
+                  icon: LucideIcons.plus,
+                  semanticLabel: 'Add task on this day',
+                  onPressed: () => showAddTask(context, day: _selected),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ..._agenda(context, state, tasks, events),
           ],
         ],
       ),
@@ -217,39 +229,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 }
 
-class _NavButton extends StatelessWidget {
-  const _NavButton(
-      {required this.icon, required this.label, required this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.df;
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: c.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DfRadius.sm),
-          side: BorderSide(color: c.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-              width: 36,
-              height: 32,
-              child: Icon(icon, size: 18, color: c.textSecondary)),
-        ),
-      ),
-    );
-  }
-}
-
 class _Legend extends StatelessWidget {
   const _Legend({required this.color, required this.label});
   final Color color;
@@ -259,8 +238,8 @@ class _Legend extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         children: [
           Container(
-              width: 6,
-              height: 6,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 6),
           Text(label,
@@ -448,6 +427,7 @@ class _WeekStrip extends StatelessWidget {
   }
 }
 
+/// Shown while DayFlow cannot read the phone's calendars.
 class _CalendarAccessCard extends StatelessWidget {
   const _CalendarAccessCard({required this.state});
   final AppState state;
@@ -457,32 +437,34 @@ class _CalendarAccessCard extends StatelessWidget {
     final c = context.df;
     final denied = state.calendarAccess == CalendarAccess.denied;
     return DfCard(
-      color: c.eventSoft,
-      onTap: denied ? null : state.connectCalendar,
-      child: Row(
+      padding: const EdgeInsets.all(DfSpace.s5),
+      child: Column(
         children: [
-          Icon(LucideIcons.calendar, color: c.event, size: 22),
-          const SizedBox(width: DfSpace.s3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                    denied
-                        ? 'Calendar access is off'
-                        : 'Connect your calendar',
-                    style: DfText.bodyStrong.copyWith(color: c.text)),
-                Text(
-                  denied
-                      ? 'Turn it on in Settings › DayFlow › Calendars to see your events here.'
-                      : 'See meetings and appointments next to your tasks. Read-only.',
-                  style: DfText.small.copyWith(color: c.textSecondary),
-                ),
-              ],
-            ),
+          Container(
+            width: 64,
+            height: 64,
+            decoration:
+                BoxDecoration(color: c.primarySoft, shape: BoxShape.circle),
+            child: Icon(LucideIcons.calendar, color: c.primary, size: 28),
           ),
-          if (!denied)
-            Icon(LucideIcons.chevronRight, color: c.textMuted, size: 18),
+          const SizedBox(height: DfSpace.s4),
+          Text(denied ? 'Calendar access is off' : 'Connect your calendar',
+              style: DfText.h3.copyWith(color: c.text)),
+          const SizedBox(height: DfSpace.s2),
+          Text(
+            denied
+                ? 'Your tasks still show here. Turn on access in iOS Settings to see your events too.'
+                : 'See meetings and appointments next to your tasks. DayFlow only reads your calendar.',
+            textAlign: TextAlign.center,
+            style: DfText.small.copyWith(color: c.textSecondary),
+          ),
+          const SizedBox(height: DfSpace.s4),
+          DfButton(
+            label: denied ? 'Open Settings' : 'Connect calendars',
+            onPressed: denied
+                ? DeviceCalendar.openSettings
+                : state.connectCalendar,
+          ),
         ],
       ),
     );

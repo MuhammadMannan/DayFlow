@@ -207,7 +207,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(width: DfSpace.s3),
               Expanded(
                 child: _StatCard(
-                    label: 'Average per active day',
+                    label: 'Average per day',
                     value: avg == 0 ? '–' : avg.toStringAsFixed(1)),
               ),
             ],
@@ -263,7 +263,7 @@ class _StreakCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text('$value',
-                  style: DfText.numericLarge.copyWith(color: c.text)),
+                  style: DfText.display.copyWith(color: c.text)),
               const SizedBox(width: 6),
               Text(value == 1 ? 'day' : 'days',
                   style: DfText.bodyStrong.copyWith(color: c.textSecondary)),
@@ -517,7 +517,10 @@ class _ByTag extends StatelessWidget {
                 child: Text('Completed by tag',
                     style: DfText.h3.copyWith(color: c.text)),
               ),
-              Text(rangeLabel[0].toUpperCase() + rangeLabel.substring(1),
+              Text(
+                  rangeLabel == 'this month'
+                      ? DateFormat('MMMM').format(DateTime.now())
+                      : rangeLabel[0].toUpperCase() + rangeLabel.substring(1),
                   style: DfText.small.copyWith(color: c.textMuted)),
             ],
           ),
@@ -627,7 +630,7 @@ class _WeeklyBars extends StatelessWidget {
                 for (var i = 0; i < _weeks; i++)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      padding: EdgeInsets.zero,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -640,6 +643,7 @@ class _WeeklyBars extends StatelessWidget {
                                       .copyWith(color: c.textSecondary)),
                             ),
                           Container(
+                            width: 22,
                             height: peak == 0
                                 ? 4
                                 : math.max(4, 118 * totals[i] / peak),

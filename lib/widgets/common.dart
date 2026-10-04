@@ -680,6 +680,8 @@ class DfTextField extends StatelessWidget {
           autocorrect: false,
           onSubmitted: onSubmitted,
           onChanged: onChanged,
+          // Leaves room under a focused field for a link or hint below it.
+          scrollPadding: const EdgeInsets.fromLTRB(20, 20, 20, 72),
           textInputAction: textInputAction,
           style: DfText.body.copyWith(color: c.text),
           cursorColor: c.primary,
@@ -719,16 +721,61 @@ class DfTextField extends StatelessWidget {
 }
 
 /// Shows a message with an optional Undo action.
+/// Dark toast with a check mark and an Undo chip, shown for 5 seconds.
 void showUndo(BuildContext context, String message, VoidCallback onUndo) {
   final messenger = ScaffoldMessenger.of(context);
   messenger.hideCurrentSnackBar();
   messenger.showSnackBar(SnackBar(
-    content: Text(message),
-    duration: const Duration(seconds: 4),
-    // Snack bars with an action stay up by default; this one should time out.
-    persist: false,
-    margin: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-    action: SnackBarAction(label: 'Undo', onPressed: onUndo),
+    duration: const Duration(seconds: 5),
+    margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+    padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+    backgroundColor: const Color(0xFF0F172A),
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DfRadius.lg),
+    ),
+    content: Row(
+      children: [
+        const Icon(LucideIcons.check, size: 18, color: Colors.white),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            message,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: DfText.smallStrong.copyWith(color: Colors.white),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Semantics(
+          button: true,
+          label: 'Undo',
+          child: GestureDetector(
+            onTap: () {
+              messenger.hideCurrentSnackBar();
+              onUndo();
+            },
+            child: Container(
+              height: 30,
+              padding: const EdgeInsets.only(left: 10, right: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(DfRadius.badge),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.undo2, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
+                  Text('Undo',
+                      style: DfText.smallStrong.copyWith(color: Colors.white)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
   ));
 }
 
@@ -764,7 +811,7 @@ Future<void> toggleTask(BuildContext context, Task task, bool done) async {
             days: milestone, completions: completionsByDay(tasks));
         if (!context.mounted) return;
       }
-      showUndo(context, 'Completed “${task.title}”', () async {
+      showUndo(context, '“${task.title}” completed', () async {
         await state.updateTask(task);
         if (nextId != null) await state.deleteTaskById(nextId);
       });

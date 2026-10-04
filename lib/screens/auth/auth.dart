@@ -12,7 +12,7 @@ String authMessage(FirebaseAuthException e) => switch (e.code) {
       'wrong-password' ||
       'invalid-credential' ||
       'invalid-login-credentials' =>
-        'That email and password don’t match an account.',
+        'That password doesn’t match this account.',
       'email-already-in-use' =>
         'There’s already an account with that email. Try signing in.',
       'weak-password' => 'Use at least 6 characters for your password.',
@@ -475,8 +475,8 @@ class _AuthFormScreenState extends State<AuthFormScreen> {
                           signUp
                               ? 'Your tasks and streak sync across devices.'
                               : 'Sign in to pick up your streak.',
-                          style:
-                              DfText.body.copyWith(color: c.textSecondary),
+                          style: DfText.bodyRegular
+                              .copyWith(color: c.textSecondary),
                         ),
                         const SizedBox(height: DfSpace.s6),
                         if (signUp) ...[
@@ -640,6 +640,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
   }
 
+  /// "muhammad@example.com" becomes "m•••@example.com".
+  String get _masked {
+    final email = _email.text.trim();
+    final at = email.indexOf('@');
+    if (at < 1) return email;
+    return '${email[0]}•••${email.substring(at)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.df;
@@ -659,30 +667,92 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: DfSpace.s4),
               Text('Reset your password',
                   style: DfText.h1.copyWith(color: c.text)),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
-                _sent
-                    ? 'If an account exists for that email, a reset link is on its way. Check your inbox.'
-                    : 'Enter your email and we’ll send you a link to set a new one.',
-                style: DfText.body.copyWith(color: c.textSecondary),
+                'Enter the email you signed up with and we’ll send a link to set a new password.',
+                style: DfText.bodyRegular.copyWith(color: c.textSecondary),
               ),
-              const SizedBox(height: DfSpace.s6),
-              if (!_sent)
-                DfTextField(
-                  controller: _email,
-                  label: 'Email',
-                  hint: 'you@example.com',
-                  icon: LucideIcons.mail,
-                  keyboardType: TextInputType.emailAddress,
-                  error: _error,
-                  onSubmitted: (_) => _send(),
-                ),
-              const Spacer(),
+              const SizedBox(height: DfSpace.s4),
+              DfTextField(
+                controller: _email,
+                label: 'Email',
+                hint: 'you@example.com',
+                icon: LucideIcons.mail,
+                keyboardType: TextInputType.emailAddress,
+                error: _error,
+                onSubmitted: (_) => _send(),
+              ),
+              const SizedBox(height: DfSpace.s4),
               DfButton(
-                label: _sent ? 'Back to sign in' : 'Send reset link',
+                label: 'Send reset link',
                 loading: _busy,
-                onPressed: _sent ? () => Navigator.pop(context) : _send,
+                onPressed: _send,
               ),
+              if (_sent) ...[
+                const SizedBox(height: DfSpace.s4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: c.successSoft,
+                    borderRadius: BorderRadius.circular(DfRadius.lg),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                            color: c.success, shape: BoxShape.circle),
+                        child: const Icon(LucideIcons.mail,
+                            size: 16, color: Colors.white),
+                      ),
+                      const SizedBox(width: DfSpace.s3),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Check your inbox',
+                                style:
+                                    DfText.bodyStrong.copyWith(color: c.text)),
+                            const SizedBox(height: 2),
+                            Text(
+                              'If an account exists for $_masked, a link is on its way.',
+                              style: DfText.small
+                                  .copyWith(color: c.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const Spacer(),
+              if (_sent)
+                Center(
+                  child: GestureDetector(
+                    onTap: _busy ? null : _send,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Text.rich(
+                        TextSpan(
+                          text: 'Didn’t get it? ',
+                          style:
+                              DfText.small.copyWith(color: c.textSecondary),
+                          children: [
+                            TextSpan(
+                              text: 'Resend',
+                              style: DfText.smallStrong
+                                  .copyWith(color: c.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

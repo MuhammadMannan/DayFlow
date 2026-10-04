@@ -91,6 +91,13 @@ void main() {
       expect(p.due, DateTime(2026, 10, 5, 19, 30));
     });
 
+    test('reports where the phrases sit in the input', () {
+      const input = 'Call mom tomorrow 6pm';
+      final p = parseQuick(input, now: now);
+      final found = p.ranges.map((r) => input.substring(r.$1, r.$2)).toList();
+      expect(found, ['tomorrow', '6pm']);
+    });
+
     test('plain text is left alone', () {
       final p = parseQuick('Buy 2 notebooks', now: now);
       expect(p.title, 'Buy 2 notebooks');

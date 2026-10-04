@@ -291,6 +291,7 @@ class TagsScreen extends StatelessWidget {
     final c = context.df;
     final state = AppScope.of(context);
     final monthStart = DateTime(DateTime.now().year, DateTime.now().month);
+    final monthEnd = DateTime(monthStart.year, monthStart.month + 1);
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -339,8 +340,12 @@ class TagsScreen extends StatelessWidget {
                         final count = state.tasks
                             .where((t) =>
                                 t.tagId == tag.id &&
-                                t.completedAt != null &&
-                                !t.completedAt!.isBefore(monthStart))
+                                // Due or finished this month.
+                                ((t.due != null &&
+                                        !t.due!.isBefore(monthStart) &&
+                                        t.due!.isBefore(monthEnd)) ||
+                                    (t.completedAt != null &&
+                                        !t.completedAt!.isBefore(monthStart))))
                             .length;
                         return InkWell(
                           onTap: () => showTagEditor(context, tag: tag),
@@ -369,7 +374,7 @@ class TagsScreen extends StatelessWidget {
                                           style: DfText.bodyStrong
                                               .copyWith(color: c.text)),
                                       Text(
-                                          '$count done this month',
+                                          '$count ${count == 1 ? 'task' : 'tasks'} this month',
                                           style: DfText.small
                                               .copyWith(color: c.textMuted)),
                                     ],

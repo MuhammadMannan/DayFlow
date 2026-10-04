@@ -31,6 +31,11 @@ import UserNotifications
         result(self.calendarStatus())
       case "request":
         self.requestCalendarAccess(result: result)
+      case "openSettings":
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+          UIApplication.shared.open(url)
+        }
+        result(nil)
       case "calendars":
         result(self.calendars())
       case "events":

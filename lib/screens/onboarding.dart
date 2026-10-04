@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/app_state.dart';
 import '../data/notifications.dart';
+import '../models/models.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 
@@ -291,8 +292,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Monday',
-                    style: DfText.bodyStrong.copyWith(color: c.text)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text('Monday',
+                          style: DfText.bodyStrong.copyWith(color: c.text)),
+                    ),
+                    // One dot per connected calendar.
+                    for (final i in const [0, 5, 3])
+                      Container(
+                        width: 10,
+                        height: 10,
+                        margin: const EdgeInsets.only(left: 4),
+                        decoration: BoxDecoration(
+                            color: c.tag(i), shape: BoxShape.circle),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: DfSpace.s3),
                 event('Sprint planning', '11:00 AM · from Google Calendar'),
                 event('Lunch with Sara', '12:30 PM · from iCloud'),
@@ -315,9 +331,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           Text('Pay rent',
                               style:
                                   DfText.bodyStrong.copyWith(color: c.text)),
-                          Text('Anytime',
-                              style:
-                                  DfText.small.copyWith(color: c.textMuted)),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Text('Anytime',
+                                  style: DfText.caption
+                                      .copyWith(color: c.textMuted)),
+                              const SizedBox(width: 8),
+                              const TagChip(
+                                  tag: Tag(
+                                      id: '', name: 'School', color: 1, order: 0)),
+                            ],
+                          ),
                         ],
                       ),
                     ],

@@ -25,8 +25,9 @@ class TimelineItem {
   int columns = 1;
 }
 
-/// Tasks have no duration, so they are drawn as a block this long.
-const taskBlockMinutes = 45;
+/// Tasks have no duration, so they are drawn as a one-hour block, as in
+/// the design.
+const taskBlockMinutes = 60;
 
 /// Gives overlapping items side-by-side columns. Items that touch end to
 /// start do not count as overlapping.
@@ -69,8 +70,8 @@ class DayTimeline extends StatelessWidget {
 
   final DateTime day;
 
-  static const _hourHeight = 60.0;
-  static const _gutter = 52.0;
+  static const _hourHeight = 56.0;
+  static const _gutter = 56.0;
 
   @override
   Widget build(BuildContext context) {
@@ -104,12 +105,18 @@ class DayTimeline extends StatelessWidget {
     ];
     layoutTimeline(items);
 
-    // Show 7 AM to 9 PM by default, widened to fit anything outside that.
-    var firstHour = 7;
-    var lastHour = 21;
+    // Show 8 AM to 6 PM by default, widened to fit anything outside that
+    // and, on today, the current time.
+    var firstHour = 8;
+    var lastHour = 18;
     for (final i in items) {
       firstHour = math.min(firstHour, i.start ~/ 60);
       lastHour = math.max(lastHour, ((i.end + 59) ~/ 60));
+    }
+    final clock = DateTime.now();
+    if (dateOnly(clock) == d) {
+      firstHour = math.min(firstHour, clock.hour);
+      lastHour = math.max(lastHour, clock.hour + 1);
     }
     lastHour = math.min(lastHour, 24);
     final hours = lastHour - firstHour;
@@ -126,12 +133,13 @@ class DayTimeline extends StatelessWidget {
       children: [
         if (anytimeTasks.isNotEmpty || allDayEvents.isNotEmpty) ...[
           DfCard(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            radius: DfRadius.lg,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Padding(
-                  padding: EdgeInsets.only(top: 9),
+                  padding: EdgeInsets.only(top: 8),
                   child: Overline('Anytime'),
                 ),
                 const SizedBox(width: DfSpace.s3),
@@ -205,11 +213,11 @@ class DayTimeline extends StatelessWidget {
                 ),
                 for (final item in items)
                   Positioned(
-                    top: 8 + yOf(item.start) + 1,
+                    top: 8 + yOf(item.start) + 2,
                     left: _gutter + width / item.columns * item.column + 2,
                     width: width / item.columns - 4,
                     height:
-                        math.max(40, yOf(item.end) - yOf(item.start) - 2),
+                        math.max(46, yOf(item.end) - yOf(item.start) - 4),
                     child: item.task != null
                         ? _TaskBlock(task: item.task!, narrow: item.columns > 1)
                         : _EventBlock(
@@ -258,6 +266,53 @@ class DayTimeline extends StatelessWidget {
   }
 }
 
+/// Small completion ring used on timeline blocks and Anytime pills.
+class _Ring extends StatelessWidget {
+  const _Ring({
+    required this.task,
+    required this.size,
+    required this.color,
+    this.stroke = 2,
+  });
+
+  final Task task;
+  final double size;
+  final Color color;
+  final double stroke;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.df;
+    return Semantics(
+      checked: task.isDone,
+      label: task.isDone ? 'Mark as not done' : 'Mark as done',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => toggleTask(context, task, !task.isDone),
+        // Padded so the tap target is larger than the ring itself.
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: task.isDone ? c.success : Colors.transparent,
+              border: Border.all(
+                  color: task.isDone ? c.success : color, width: stroke),
+            ),
+            child: task.isDone
+                ? Icon(LucideIcons.check,
+                    size: size * 0.62, color: Colors.white)
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TaskBlock extends StatelessWidget {
   const _TaskBlock({required this.task, required this.narrow});
 
@@ -273,7 +328,10 @@ class _TaskBlock extends StatelessWidget {
     final bg = tag == null ? c.primarySoft : c.tagSoft(tag.color);
     final detail = [
       formatTime(task.due!),
-      if (task.remind) 'reminder',
+      if (task.remind)
+        task.remindMinutes == 0
+            ? 'reminder'
+            : 'reminder ${reminderLabel(true, task.remindMinutes)}',
     ].join(' · ');
 
     return Material(
@@ -287,14 +345,13 @@ class _TaskBlock extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DfCheckbox(
-                checked: task.isDone,
-                color: tint,
-                onChanged: (v) => toggleTask(context, task, v),
-              ),
+              // 2 + 8 padding puts the 18pt ring 10 from the left edge.
+              const SizedBox(width: 2),
+              _Ring(task: task, size: 18, color: tint),
+              const SizedBox(width: 2),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 5, right: 8),
+                  padding: const EdgeInsets.only(top: 8, right: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -303,11 +360,14 @@ class _TaskBlock extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: DfText.smallStrong.copyWith(color: c.text)),
                       if (!narrow)
-                        Text(detail,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: DfText.caption
-                                .copyWith(color: c.textSecondary)),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Text(detail,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: DfText.caption
+                                  .copyWith(color: c.textSecondary)),
+                        ),
                     ],
                   ),
                 ),
@@ -380,26 +440,18 @@ class _AnytimePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     return Material(
-      color: c.surface,
+      color: Colors.transparent,
       shape: StadiumBorder(side: BorderSide(color: c.border)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => openTaskDetail(context, task),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 12, 0),
+        child: SizedBox(
+          height: 30,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 32,
-                height: 34,
-                child: FittedBox(
-                  child: DfCheckbox(
-                    checked: task.isDone,
-                    onChanged: (v) => toggleTask(context, task, v),
-                  ),
-                ),
-              ),
+              _Ring(
+                  task: task, size: 12, color: c.borderStrong, stroke: 1.5),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 180),
                 child: Text(
@@ -410,6 +462,7 @@ class _AnytimePill extends StatelessWidget {
                       color: task.isDone ? c.textMuted : c.text),
                 ),
               ),
+              const SizedBox(width: 10),
             ],
           ),
         ),
@@ -426,8 +479,8 @@ class _AllDayPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 30,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: c.eventSoft,
         borderRadius: BorderRadius.circular(DfRadius.full),

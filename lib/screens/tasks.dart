@@ -135,7 +135,8 @@ class _TasksScreenState extends State<TasksScreen> {
               borderRadius: BorderRadius.circular(DfRadius.row),
               border: Border.all(color: c.primary, width: 1.5),
             ),
-            padding: const EdgeInsets.only(left: 14, right: 8),
+            constraints: const BoxConstraints(minHeight: 63),
+            padding: const EdgeInsets.only(left: 16, right: 8),
             child: Row(
               children: [
                 Icon(LucideIcons.plus, size: 20, color: c.primary),
@@ -145,11 +146,16 @@ class _TasksScreenState extends State<TasksScreen> {
                     controller: _quick,
                     onSubmitted: (_) => _quickAdd(),
                     textInputAction: TextInputAction.done,
+                    keyboardType: TextInputType.text,
+                    minLines: 1,
+                    maxLines: 2,
                     textCapitalization: TextCapitalization.sentences,
                     style: DfText.body.copyWith(color: c.text),
                     cursorColor: c.primary,
                     decoration: InputDecoration(
                       border: InputBorder.none,
+                      isDense: true,
+                      hintMaxLines: 2,
                       hintText: 'Add a task… e.g. “Call mom tomorrow 6pm”',
                       hintStyle: DfText.body.copyWith(color: c.textMuted),
                     ),
@@ -210,19 +216,20 @@ class _TasksScreenState extends State<TasksScreen> {
             ..._section('Completed', completed, muted: true, showDate: true),
             const SizedBox(height: DfSpace.s4),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: c.primarySoft,
                 borderRadius: BorderRadius.circular(DfRadius.field),
               ),
               child: Row(
                 children: [
-                  Icon(LucideIcons.sparkle, size: 16, color: c.primary),
-                  const SizedBox(width: 10),
+                  Icon(LucideIcons.sparkle, size: 16, color: c.primaryStrong),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Swipe right to complete, left to delete. Tap a task to edit or reschedule.',
-                      style: DfText.small.copyWith(color: c.primary),
+                      style: DfText.caption.copyWith(color: c.primaryStrong),
                     ),
                   ),
                 ],
@@ -355,20 +362,29 @@ class _Swipeable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.df;
-    Widget bg(Color color, IconData icon, Alignment align) => Container(
-          alignment: align,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+    Widget bg(Color color, IconData icon, String label, bool leading) =>
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(DfRadius.row),
           ),
-          child: Icon(icon, color: Colors.white),
+          child: Row(
+            mainAxisAlignment:
+                leading ? MainAxisAlignment.start : MainAxisAlignment.end,
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(width: 8),
+              Text(label,
+                  style: DfText.smallStrong.copyWith(color: Colors.white)),
+            ],
+          ),
         );
     return Dismissible(
       key: ValueKey('swipe-${task.id}-${task.isDone}'),
-      background: bg(c.success, LucideIcons.check, Alignment.centerLeft),
-      secondaryBackground:
-          bg(c.danger, LucideIcons.trash, Alignment.centerRight),
+      background: bg(c.success, LucideIcons.check,
+          task.isDone ? 'Not done' : 'Done', true),
+      secondaryBackground: bg(c.danger, LucideIcons.trash, 'Delete', false),
       confirmDismiss: (direction) async {
         final state = AppScope.read(context);
         if (direction == DismissDirection.startToEnd) {
@@ -377,7 +393,7 @@ class _Swipeable extends StatelessWidget {
           try {
             await state.deleteTask(task);
             if (context.mounted) {
-              showUndo(context, 'Deleted “${task.title}”',
+              showUndo(context, '“${task.title}” deleted',
                   () => state.restoreTask(task));
             }
           } catch (_) {

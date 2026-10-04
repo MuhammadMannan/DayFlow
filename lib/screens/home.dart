@@ -17,6 +17,9 @@ import 'profile.dart';
 import 'shell.dart';
 import 'task_detail.dart';
 
+/// Whether the finished list is collapsed in the all-done state.
+final _hideDone = ValueNotifier<bool>(false);
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -37,6 +40,8 @@ class HomeScreen extends StatelessWidget {
     final overdue = state.overdue;
     final events = state.eventsOn(today);
     final isEmpty = state.loaded && state.tasks.isEmpty;
+    final allDone =
+        todayTasks.isNotEmpty && todayTasks.every((t) => t.isDone);
 
     return SafeArea(
       bottom: false,
@@ -136,33 +141,38 @@ class HomeScreen extends StatelessWidget {
                   onToggle: (v) => toggleTask(context, t, v),
                   onTap: () => openTaskDetail(context, t),
                 ),
-                const SizedBox(height: DfSpace.s2),
+                const SizedBox(height: 10),
               ],
             ],
             const SizedBox(height: DfSpace.s5),
-            SectionHeader(
-              title: 'Today · ${todayTasks.length + events.length}',
-              action: 'See all',
-              onAction: () => Shell.of(context).goTo(2),
-            ),
-            const SizedBox(height: DfSpace.s3),
-            if (todayTasks.isEmpty && events.isEmpty)
-              DfCard(
-                onTap: () => showAddTask(context, day: today),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.plus, size: 18, color: c.primary),
-                    const SizedBox(width: DfSpace.s3),
-                    Expanded(
-                      child: Text('Nothing planned today. Add a task.',
-                          style: DfText.body.copyWith(color: c.textSecondary)),
-                    ),
-                  ],
-                ),
-              )
-            else
-              ..._timeline(context, todayTasks, events),
-            ..._comingUp(context, state, today),
+            if (allDone)
+              ..._allDoneSections(context, state, todayTasks, events, today)
+            else ...[
+              SectionHeader(
+                title: 'Today · ${todayTasks.length + events.length}',
+                action: 'See all',
+                onAction: () => Shell.of(context).goTo(2),
+              ),
+              const SizedBox(height: DfSpace.s3),
+              if (todayTasks.isEmpty && events.isEmpty)
+                DfCard(
+                  onTap: () => showAddTask(context, day: today),
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.plus, size: 18, color: c.primary),
+                      const SizedBox(width: DfSpace.s3),
+                      Expanded(
+                        child: Text('Nothing planned today. Add a task.',
+                            style:
+                                DfText.body.copyWith(color: c.textSecondary)),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ..._timeline(context, todayTasks, events),
+              ..._comingUp(context, state, today),
+            ],
           ],
           if (state.loaded &&
               state.calendarAccess == CalendarAccess.notDetermined) ...[
@@ -287,20 +297,24 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Timed tasks and events in time order, then untimed tasks.
+  /// Completed tasks first, in the order they were finished, then timed
+  /// tasks and events in time order, then untimed tasks.
   List<Widget> _timeline(
       BuildContext context, List<Task> tasks, List<CalEvent> events) {
+    TaskRow row(Task t) => TaskRow(
+          task: t,
+          onToggle: (v) => toggleTask(context, t, v),
+          onTap: () => openTaskDetail(context, t),
+        );
+    final done = tasks.where((t) => t.isDone).toList()
+      ..sort((a, b) => a.completedAt!.compareTo(b.completedAt!));
     final items = <(DateTime, Widget)>[];
     final untimed = <Widget>[];
-    for (final t in tasks) {
-      final row = TaskRow(
-        task: t,
-        onToggle: (v) => toggleTask(context, t, v),
-        onTap: () => openTaskDetail(context, t),
-      );
+    for (final t in tasks.where((t) => !t.isDone)) {
       if (t.hasTime && t.isOn(DateTime.now())) {
-        items.add((t.due!, row));
+        items.add((t.due!, row(t)));
       } else {
-        untimed.add(row);
+        untimed.add(row(t));
       }
     }
     for (final e in events) {
@@ -308,10 +322,71 @@ class HomeScreen extends StatelessWidget {
     }
     items.sort((a, b) => a.$1.compareTo(b.$1));
     return [
-      for (final w in [...items.map((i) => i.$2), ...untimed]) ...[
+      for (final w in [
+        ...done.map(row),
+        ...items.map((i) => i.$2),
+        ...untimed,
+      ]) ...[
         w,
-        const SizedBox(height: DfSpace.s2),
+        const SizedBox(height: 10),
       ],
+    ];
+  }
+
+  /// Once everything planned is done: the finished list (which can be
+  /// hidden) and a look at tomorrow.
+  List<Widget> _allDoneSections(BuildContext context, AppState state,
+      List<Task> todayTasks, List<CalEvent> events, DateTime today) {
+    final c = context.df;
+    final tomorrow = today.add(const Duration(days: 1));
+    final tomorrowTasks =
+        state.tasksOn(tomorrow).where((t) => !t.isDone).toList();
+    return [
+      ValueListenableBuilder<bool>(
+        valueListenable: _hideDone,
+        builder: (context, hidden, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionHeader(
+              title: 'Done today · ${todayTasks.length}',
+              action: hidden ? 'Show' : 'Hide',
+              onAction: () => _hideDone.value = !hidden,
+            ),
+            const SizedBox(height: DfSpace.s3),
+            if (!hidden) ..._timeline(context, todayTasks, events),
+          ],
+        ),
+      ),
+      const SizedBox(height: DfSpace.s3),
+      SectionHeader(
+        title: 'Tomorrow',
+        action: 'Plan',
+        onAction: () => showAddTask(context, day: tomorrow),
+      ),
+      const SizedBox(height: DfSpace.s3),
+      if (tomorrowTasks.isEmpty)
+        DfCard(
+          onTap: () => showAddTask(context, day: tomorrow),
+          child: Row(
+            children: [
+              Icon(LucideIcons.plus, size: 18, color: c.primary),
+              const SizedBox(width: DfSpace.s3),
+              Expanded(
+                child: Text('Nothing lined up yet. Plan tomorrow.',
+                    style: DfText.body.copyWith(color: c.textSecondary)),
+              ),
+            ],
+          ),
+        )
+      else
+        for (final t in tomorrowTasks) ...[
+          TaskRow(
+            task: t,
+            onToggle: (v) => toggleTask(context, t, v),
+            onTap: () => openTaskDetail(context, t),
+          ),
+          const SizedBox(height: 10),
+        ],
     ];
   }
 

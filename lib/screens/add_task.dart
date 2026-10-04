@@ -43,12 +43,13 @@ class AddTaskSheet extends StatefulWidget {
 }
 
 class _AddTaskSheetState extends State<AddTaskSheet> {
-  late final TextEditingController _title;
+  late final _HighlightController _title;
   late final TextEditingController _notes;
   late bool _expanded;
   DateTime? _date;
   TimeOfDay? _time;
   bool _remind = false;
+  bool _remindTouched = false;
   int _remindMinutes = 0;
   Repeat _repeat = Repeat.none;
   String? _tagId;
@@ -67,7 +68,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   void initState() {
     super.initState();
     final t = widget.task;
-    _title = TextEditingController(text: t?.title ?? widget.title ?? '');
+    _title = _HighlightController(text: t?.title ?? widget.title ?? '');
     _notes = TextEditingController(text: t?.notes ?? '');
     _expanded = _editing;
     if (t != null) {
@@ -107,7 +108,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       if (!_dateTouched && p.date != null) _date = p.date;
       if (!_timeTouched) {
         _time = p.hasTime ? TimeOfDay(hour: p.hour!, minute: p.minute!) : null;
+        // A typed time implies wanting a reminder, unless they chose otherwise.
+        if (!_remindTouched) _remind = p.hasTime;
       }
+      _title.ranges = p.ranges;
     });
   }
 
@@ -142,14 +146,14 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   }
 
   void _setDate(DateTime? d) => setState(() {
-        _date = d;
-        _dateTouched = true;
-        if (d == null) {
-          _time = null;
-          _timeTouched = true;
-          _repeat = Repeat.none;
-        }
-      });
+    _date = d;
+    _dateTouched = true;
+    if (d == null) {
+      _time = null;
+      _timeTouched = true;
+      _repeat = Repeat.none;
+    }
+  });
 
   /// A reminder needs a time to fire at, so turning one on asks for it.
   Future<void> _setReminder(bool on, [int? minutes]) async {
@@ -159,6 +163,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     }
     setState(() {
       _remind = on;
+      _remindTouched = true;
       if (minutes != null) _remindMinutes = minutes;
     });
   }
@@ -181,8 +186,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               for (final m in [-1, ...reminderLeads])
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(reminderLabel(m >= 0, m),
-                      style: DfText.body.copyWith(color: c.text)),
+                  title: Text(
+                    reminderLabel(m >= 0, m),
+                    style: DfText.body.copyWith(color: c.text),
+                  ),
                   trailing: m == current
                       ? Icon(LucideIcons.check, color: c.primary, size: 20)
                       : null,
@@ -247,21 +254,28 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final state = AppScope.read(context);
     DateTime? due;
     if (_date != null) {
-      due = DateTime(_date!.year, _date!.month, _date!.day, _time?.hour ?? 0,
-          _time?.minute ?? 0);
+      due = DateTime(
+        _date!.year,
+        _date!.month,
+        _date!.day,
+        _time?.hour ?? 0,
+        _time?.minute ?? 0,
+      );
     }
     try {
       if (_editing) {
-        await state.updateTask(widget.task!.copyWith(
-          title: title,
-          notes: _notes.text.trim(),
-          tagId: () => _tagId,
-          due: () => due,
-          hasTime: _time != null,
-          repeat: _repeat,
-          remind: _remind && _time != null,
-          remindMinutes: _remindMinutes,
-        ));
+        await state.updateTask(
+          widget.task!.copyWith(
+            title: title,
+            notes: _notes.text.trim(),
+            tagId: () => _tagId,
+            due: () => due,
+            hasTime: _time != null,
+            repeat: _repeat,
+            remind: _remind && _time != null,
+            remindMinutes: _remindMinutes,
+          ),
+        );
       } else {
         await state.addTask(
           title: title,
@@ -285,39 +299,53 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     }
   }
 
-  String get _dateLabel =>
-      _date == null ? 'No date' : relativeDay(_date!);
+  String get _dateLabel => _date == null ? 'No date' : relativeDay(_date!);
 
   String get _timeLabel => _time == null ? 'Time' : _time!.format(context);
 
   @override
   Widget build(BuildContext context) {
     final c = context.df;
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final media = MediaQuery.of(context);
+    final bottom = media.viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
       child: SafeArea(
         top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
-              DfSpace.s5, DfSpace.s3, DfSpace.s5, DfSpace.s4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: c.borderStrong,
-                    borderRadius: BorderRadius.circular(3),
+            DfSpace.s5,
+            DfSpace.s3,
+            DfSpace.s5,
+            DfSpace.s4,
+          ),
+          child: ConstrainedBox(
+            // The full form rises to just below the status bar.
+            constraints: BoxConstraints(
+              minHeight: _expanded && bottom == 0
+                  ? media.size.height - media.padding.vertical - 70 - 28
+                  : 0,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: c.borderStrong,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: DfSpace.s3),
+                  if (_expanded) ..._full(c) else ..._quick(c),
+                ],
               ),
-              const SizedBox(height: DfSpace.s3),
-              if (_expanded) ..._full(c) else ..._quick(c),
-            ],
+            ),
           ),
         ),
       ),
@@ -374,8 +402,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               Icon(LucideIcons.sparkle, size: 14, color: c.primary),
               const SizedBox(width: 6),
               Flexible(
-                child: Text('We picked up “${_parsed.matched}”',
-                    style: DfText.small.copyWith(color: c.primary)),
+                child: Text(
+                  'We picked up “${_parsed.matched}”',
+                  style: DfText.small.copyWith(color: c.primary),
+                ),
               ),
             ],
           ),
@@ -428,6 +458,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               behavior: HitTestBehavior.opaque,
               onTap: () => setState(() {
                 _expanded = true;
+                _title.ranges = const [];
                 if (_parsed.title.isNotEmpty) _title.text = _parsed.title;
               }),
               child: Padding(
@@ -436,8 +467,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   children: [
                     Icon(LucideIcons.repeat, size: 18, color: c.textSecondary),
                     const SizedBox(width: 8),
-                    Text('Repeat, notes and more',
-                        style: DfText.small.copyWith(color: c.textSecondary)),
+                    Text(
+                      'Repeat, notes and more',
+                      style: DfText.small.copyWith(color: c.textSecondary),
+                    ),
                   ],
                 ),
               ),
@@ -459,10 +492,15 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       ? const Padding(
                           padding: EdgeInsets.all(12),
                           child: CircularProgressIndicator(
-                              strokeWidth: 2.4, color: Colors.white),
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
                         )
-                      : const Icon(LucideIcons.arrowRight,
-                          size: 20, color: Colors.white),
+                      : const Icon(
+                          LucideIcons.arrowRight,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                 ),
               ),
             ),
@@ -480,7 +518,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     while (weekend.weekday != DateTime.saturday) {
       weekend = weekend.add(const Duration(days: 1));
     }
-    final isCustom = _date != null &&
+    final isCustom =
+        _date != null &&
         _date != today &&
         _date != tomorrow &&
         _date != weekend;
@@ -490,18 +529,24 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         children: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: DfText.body.copyWith(color: c.textSecondary)),
+            child: Text(
+              'Cancel',
+              style: DfText.body.copyWith(color: c.textSecondary),
+            ),
           ),
           Expanded(
-            child: Text(_editing ? 'Edit task' : 'New task',
-                textAlign: TextAlign.center,
-                style: DfText.bodyStrong.copyWith(color: c.text)),
+            child: Text(
+              _editing ? 'Edit task' : 'New task',
+              textAlign: TextAlign.center,
+              style: DfText.bodyStrong.copyWith(color: c.text),
+            ),
           ),
           TextButton(
             onPressed: _saving ? null : _save,
-            child: Text('Save',
-                style: DfText.bodyStrong.copyWith(color: c.primary)),
+            child: Text(
+              'Save',
+              style: DfText.bodyStrong.copyWith(color: c.primary),
+            ),
           ),
         ],
       ),
@@ -518,14 +563,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               controller: _title,
               onChanged: (_) => setState(() => _error = null),
               textCapitalization: TextCapitalization.sentences,
-              style: DfText.h3.copyWith(color: c.text, fontSize: 20),
+              style: DfText.h2.copyWith(color: c.text),
               cursorColor: c.primary,
               decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
                 hintText: 'Task name',
-                hintStyle:
-                    DfText.h3.copyWith(color: c.textMuted, fontSize: 20),
+                hintStyle: DfText.h2.copyWith(color: c.textMuted),
               ),
             ),
             TextField(
@@ -557,32 +601,37 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         child: Row(
           children: [
             _Pill(
-                label: 'Today',
-                selected: _date == today,
-                onTap: () => _setDate(today)),
+              label: 'Today',
+              selected: _date == today,
+              onTap: () => _setDate(today),
+            ),
             const SizedBox(width: 8),
             _Pill(
-                label: 'Tomorrow',
-                selected: _date == tomorrow,
-                onTap: () => _setDate(tomorrow)),
+              label: 'Tomorrow',
+              selected: _date == tomorrow,
+              onTap: () => _setDate(tomorrow),
+            ),
             const SizedBox(width: 8),
             _Pill(
-                label: 'Weekend',
-                selected: _date == weekend && _date != today && _date != tomorrow,
-                onTap: () => _setDate(weekend)),
+              label: 'Weekend',
+              selected: _date == weekend && _date != today && _date != tomorrow,
+              onTap: () => _setDate(weekend),
+            ),
             const SizedBox(width: 8),
             _Pill(label: 'Pick date', selected: isCustom, onTap: _pickDate),
             const SizedBox(width: 8),
             _Pill(
-                label: 'No date',
-                selected: _date == null,
-                onTap: () => _setDate(null)),
+              label: 'No date',
+              selected: _date == null,
+              onTap: () => _setDate(null),
+            ),
           ],
         ),
       ),
       const SizedBox(height: DfSpace.s4),
       Container(
         decoration: BoxDecoration(
+          color: c.surface,
           borderRadius: BorderRadius.circular(DfRadius.card),
           border: Border.all(color: c.border),
         ),
@@ -606,9 +655,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               onClear: _time == null
                   ? null
                   : () => setState(() {
-                        _time = null;
-                        _timeTouched = true;
-                      }),
+                      _time = null;
+                      _timeTouched = true;
+                    }),
             ),
             Divider(color: c.border),
             _FormRow(
@@ -621,11 +670,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             _FormRow(
               icon: LucideIcons.repeat,
               label: 'Repeat',
-              value: _repeat.label,
+              value: repeatLabel(_repeat, _date),
               onTap: _date == null
                   ? null
-                  : () => setState(() => _repeat = Repeat
-                      .values[(_repeat.index + 1) % Repeat.values.length]),
+                  : () => setState(
+                      () => _repeat = Repeat
+                          .values[(_repeat.index + 1) % Repeat.values.length],
+                    ),
             ),
           ],
         ),
@@ -639,8 +690,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         children: [
           for (final tag in state.tags)
             GestureDetector(
-              onTap: () => setState(
-                  () => _tagId = _tagId == tag.id ? null : tag.id),
+              onTap: () =>
+                  setState(() => _tagId = _tagId == tag.id ? null : tag.id),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: TagChip(tag: tag, selected: tag.id == _tagId),
@@ -663,15 +714,17 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 children: [
                   Icon(LucideIcons.plus, size: 13, color: c.textSecondary),
                   const SizedBox(width: 4),
-                  Text('New',
-                      style: DfText.smallStrong
-                          .copyWith(color: c.textSecondary)),
+                  Text(
+                    'New',
+                    style: DfText.smallStrong.copyWith(color: c.textSecondary),
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
+      const Spacer(),
       const SizedBox(height: DfSpace.s6),
       DfButton(
         label: _editing ? 'Save changes' : 'Create task',
@@ -698,7 +751,7 @@ class _QuickChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.df;
-    final fg = active ? c.primary : c.textSecondary;
+    final fg = active ? c.primaryStrong : c.textSecondary;
     return Material(
       color: active ? c.primarySoft : c.surfaceMuted,
       borderRadius: BorderRadius.circular(DfRadius.md),
@@ -734,7 +787,7 @@ class _Pill extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? c.text : c.surface,
           borderRadius: BorderRadius.circular(DfRadius.full),
@@ -742,8 +795,9 @@ class _Pill extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: DfText.smallStrong
-              .copyWith(color: selected ? c.surface : c.text),
+          style: DfText.smallStrong.copyWith(
+            color: selected ? c.surface : c.text,
+          ),
         ),
       ),
     );
@@ -752,7 +806,12 @@ class _Pill extends StatelessWidget {
 
 /// Outlined pill used for "move it" shortcuts elsewhere.
 class DfPill extends StatelessWidget {
-  const DfPill({super.key, required this.label, this.selected = false, this.onTap});
+  const DfPill({
+    super.key,
+    required this.label,
+    this.selected = false,
+    this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -818,5 +877,49 @@ class _FormRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Text controller that paints recognised date and time phrases in blue.
+class _HighlightController extends TextEditingController {
+  _HighlightController({super.text});
+
+  List<(int, int)> _ranges = const [];
+
+  set ranges(List<(int, int)> value) {
+    _ranges = value;
+    notifyListeners();
+  }
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final value = text;
+    final valid =
+        _ranges
+            .where((r) => r.$1 >= 0 && r.$2 <= value.length && r.$1 < r.$2)
+            .toList()
+          ..sort((a, b) => a.$1.compareTo(b.$1));
+    if (valid.isEmpty) {
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: withComposing,
+      );
+    }
+    final highlight = style?.copyWith(color: context.df.primary);
+    final spans = <TextSpan>[];
+    var at = 0;
+    for (final (start, end) in valid) {
+      if (start < at) continue;
+      if (start > at) spans.add(TextSpan(text: value.substring(at, start)));
+      spans.add(TextSpan(text: value.substring(start, end), style: highlight));
+      at = end;
+    }
+    if (at < value.length) spans.add(TextSpan(text: value.substring(at)));
+    return TextSpan(style: style, children: spans);
   }
 }

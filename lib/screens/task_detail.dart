@@ -10,9 +10,14 @@ import 'add_task.dart';
 
 void openTaskDetail(BuildContext context, Task task) {
   final state = AppScope.read(context);
-  Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
-    builder: (_) => AppScope(state: state, child: TaskDetailScreen(id: task.id)),
-  ));
+  Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute(
+      builder: (_) => AppScope(
+        state: state,
+        child: TaskDetailScreen(id: task.id),
+      ),
+    ),
+  );
 }
 
 class TaskDetailScreen extends StatelessWidget {
@@ -47,8 +52,10 @@ class TaskDetailScreen extends StatelessWidget {
       try {
         await state.moveTo(t, day);
         if (context.mounted) {
-          showMessage(context,
-              day == null ? 'Moved to Someday' : 'Moved to ${relativeDay(day)}');
+          showMessage(
+            context,
+            day == null ? 'Moved to Someday' : 'Moved to ${relativeDay(day)}',
+          );
         }
       } catch (_) {
         if (context.mounted) {
@@ -75,8 +82,9 @@ class TaskDetailScreen extends StatelessWidget {
           content: Text('“${t.title}” will be removed.'),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text('Delete', style: TextStyle(color: c.danger)),
@@ -100,7 +108,11 @@ class TaskDetailScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  DfSpace.s5, DfSpace.s2, DfSpace.s5, 0),
+                DfSpace.s5,
+                DfSpace.s2,
+                DfSpace.s5,
+                0,
+              ),
               child: Row(
                 children: [
                   DfIconButton(
@@ -109,10 +121,58 @@ class TaskDetailScreen extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Spacer(),
-                  TextButton(
-                    onPressed: () => showAddTask(context, task: t),
-                    child: Text('Edit',
-                        style: DfText.bodyStrong.copyWith(color: c.primary)),
+                  DfIconButton(
+                    icon: LucideIcons.ellipsis,
+                    semanticLabel: 'More actions',
+                    onPressed: () => showModalBottomSheet<void>(
+                      context: context,
+                      builder: (ctx) => SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DfSpace.s5,
+                            vertical: DfSpace.s3,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(
+                                  LucideIcons.pencil,
+                                  size: 20,
+                                  color: c.text,
+                                ),
+                                title: Text(
+                                  'Edit task',
+                                  style: DfText.body.copyWith(color: c.text),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  showAddTask(context, task: t);
+                                },
+                              ),
+                              if (!t.isDone && t.due != null)
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Icon(
+                                    LucideIcons.inbox,
+                                    size: 20,
+                                    color: c.text,
+                                  ),
+                                  title: Text(
+                                    'Move to Someday',
+                                    style: DfText.body.copyWith(color: c.text),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(ctx);
+                                    move(null);
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -123,16 +183,20 @@ class TaskDetailScreen extends StatelessWidget {
                 children: [
                   if (tag != null)
                     Align(
-                        alignment: Alignment.centerLeft,
-                        child: TagChip(tag: tag)),
+                      alignment: Alignment.centerLeft,
+                      child: TagChip(tag: tag),
+                    ),
                   const SizedBox(height: DfSpace.s3),
                   Text(t.title, style: DfText.h1.copyWith(color: c.text)),
                   if (overdue) ...[
                     const SizedBox(height: DfSpace.s2),
                     Row(
                       children: [
-                        Icon(LucideIcons.circleAlert,
-                            size: 16, color: c.danger),
+                        Icon(
+                          LucideIcons.circleAlert,
+                          size: 16,
+                          color: c.danger,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Overdue since ${relativeDay(t.due!).toLowerCase()}'
@@ -178,13 +242,15 @@ class TaskDetailScreen extends StatelessWidget {
                           icon: LucideIcons.bell,
                           label: 'Reminder',
                           value: reminderLabel(
-                              t.remind && t.hasTime, t.remindMinutes),
+                            t.remind && t.hasTime,
+                            t.remindMinutes,
+                          ),
                         ),
                         Divider(color: c.border),
                         _InfoRow(
                           icon: LucideIcons.repeat,
                           label: 'Repeat',
-                          value: t.repeat.label,
+                          value: repeatLabel(t.repeat, t.due),
                         ),
                       ],
                     ),
@@ -197,8 +263,10 @@ class TaskDetailScreen extends StatelessWidget {
                         children: [
                           const Overline('Notes'),
                           const SizedBox(height: 6),
-                          Text(t.notes,
-                              style: DfText.body.copyWith(color: c.text)),
+                          Text(
+                            t.notes,
+                            style: DfText.body.copyWith(color: c.text),
+                          ),
                         ],
                       ),
                     ),
@@ -207,25 +275,42 @@ class TaskDetailScreen extends StatelessWidget {
                     const SizedBox(height: DfSpace.s5),
                     const Overline('Move it'),
                     const SizedBox(height: DfSpace.s3),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        DfPill(label: 'Today', onTap: () => move(today)),
-                        DfPill(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          DfPill(label: 'Today', onTap: () => move(today)),
+                          const SizedBox(width: 8),
+                          DfPill(
                             label: 'Tomorrow',
                             onTap: () =>
-                                move(today.add(const Duration(days: 1)))),
-                        DfPill(
+                                move(today.add(const Duration(days: 1))),
+                          ),
+                          const SizedBox(width: 8),
+                          DfPill(
                             label: 'Next week',
                             onTap: () =>
-                                move(today.add(const Duration(days: 7)))),
-                        DfPill(label: 'Pick date', onTap: pickDate),
-                        DfPill(label: 'Someday', onTap: () => move(null)),
-                      ],
+                                move(today.add(const Duration(days: 7))),
+                          ),
+                          const SizedBox(width: 8),
+                          DfPill(label: 'Pick date', onTap: pickDate),
+                        ],
+                      ),
                     ),
                   ],
-                  const SizedBox(height: DfSpace.s5),
+                ],
+              ),
+            ),
+            // Pinned to the bottom, as in the design.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DfSpace.s5,
+                DfSpace.s2,
+                DfSpace.s5,
+                DfSpace.s2,
+              ),
+              child: Column(
+                children: [
                   DfButton(
                     label: t.isDone ? 'Mark as not done' : 'Mark complete',
                     icon: t.isDone ? null : LucideIcons.check,
@@ -257,7 +342,11 @@ class TaskDetailScreen extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -267,7 +356,7 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.df;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
           Icon(icon, size: 18, color: c.textMuted),

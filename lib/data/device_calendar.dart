@@ -37,6 +37,17 @@ class DeviceCalendar {
     }
   }
 
+  /// Opens DayFlow's page in the iOS Settings app.
+  static Future<void> openSettings() async {
+    try {
+      await _channel.invokeMethod<void>('openSettings');
+    } on MissingPluginException {
+      // Not available on this platform.
+    } on PlatformException catch (e) {
+      debugPrint('Open settings failed: $e');
+    }
+  }
+
   static Future<List<DeviceCal>> calendars() async {
     try {
       final raw = await _channel.invokeListMethod<Map>('calendars');
